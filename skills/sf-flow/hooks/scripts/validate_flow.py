@@ -45,11 +45,10 @@ from typing import Dict, List
 import sys
 import os
 
-# Import validators from shared location
+# Import validators from shared location (canonical installed path)
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 PLUGIN_ROOT = os.path.dirname(os.path.dirname(SCRIPT_DIR))  # sf-flow/
-SKILLS_ROOT = os.path.dirname(PLUGIN_ROOT)  # sf-skills/
-SHARED_SCRIPTS = os.path.join(SKILLS_ROOT, "shared", "hooks", "scripts")
+SHARED_SCRIPTS = os.path.join(os.path.expanduser("~"), ".claude", "hooks", "scripts")
 sys.path.insert(0, SHARED_SCRIPTS)
 from naming_validator import NamingValidator
 from security_validator import SecurityValidator

@@ -27,38 +27,21 @@ Installation:
 
 import json
 import os
-import select
 import shutil
 import sys
 from datetime import datetime
 from pathlib import Path
 
-
-def read_stdin_safe(timeout_seconds: float = 0.1) -> dict:
-    """
-    Safely read JSON from stdin with timeout.
-
-    Returns empty dict if:
-    - stdin is a TTY (interactive terminal)
-    - No data available within timeout
-    - JSON parsing fails
-
-    This prevents blocking when Claude Code doesn't pipe data.
-    """
-    # Skip if running interactively
-    if sys.stdin.isatty():
-        return {}
-
-    try:
-        # Use select to check if stdin has data (Unix only)
-        readable, _, _ = select.select([sys.stdin], [], [], timeout_seconds)
-        if not readable:
+try:
+    from stdin_utils import read_stdin_safe
+except ImportError:
+    def read_stdin_safe(timeout_seconds=0.1):
+        if sys.stdin.isatty():
             return {}
-
-        # Read and parse
-        return json.load(sys.stdin)
-    except (json.JSONDecodeError, EOFError, OSError, ValueError):
-        return {}
+        try:
+            return json.load(sys.stdin)
+        except Exception:
+            return {}
 
 
 # Session directory base
@@ -67,19 +50,33 @@ SESSIONS_DIR = Path.home() / ".claude" / "sessions"
 
 def is_pid_alive(pid: int) -> bool:
     """
-    Check if a process is still running.
+    Check if a process is still running (cross-platform).
 
-    Uses signal 0 which doesn't actually send a signal but checks
-    if the process exists and we have permission to signal it.
+    On Unix, uses signal 0.  On Windows, uses kernel32.OpenProcess
+    since os.kill() only supports SIGTERM there.
     """
-    try:
-        os.kill(pid, 0)  # Signal 0 = check existence
-        return True
-    except (OSError, ProcessLookupError):
-        return False
-    except PermissionError:
-        # Process exists but we can't signal it (different user)
-        return True
+    if sys.platform == "win32":
+        try:
+            import ctypes
+            PROCESS_QUERY_LIMITED_INFORMATION = 0x1000
+            handle = ctypes.windll.kernel32.OpenProcess(
+                PROCESS_QUERY_LIMITED_INFORMATION, False, pid
+            )
+            if handle:
+                ctypes.windll.kernel32.CloseHandle(handle)
+                return True
+            return False
+        except (OSError, AttributeError):
+            return False
+    else:
+        try:
+            os.kill(pid, 0)  # Signal 0 = check existence
+            return True
+        except (OSError, ProcessLookupError):
+            return False
+        except PermissionError:
+            # Process exists but we can't signal it (different user)
+            return True
 
 
 def cleanup_old_sessions():
@@ -131,14 +128,17 @@ def cleanup_stale_settings_hooks():
     for event_name in list(settings["hooks"].keys()):
         cleaned = []
         for hook_group in settings["hooks"][event_name]:
-            # Identify sf-skills hooks via marker or path heuristic
-            is_sf = hook_group.get("_sf_skills", False)
-            if not is_sf:
-                for nested in hook_group.get("hooks", []):
-                    cmd = nested.get("command", "")
-                    if ".claude/hooks" in cmd or "sf-skills" in cmd or "shared/hooks" in cmd:
-                        is_sf = True
-                        break
+            # Identify sf-skills hooks via path heuristic
+            is_sf = False
+            for nested in hook_group.get("hooks", []):
+                cmd = nested.get("command", "")
+                if any(indicator in cmd for indicator in (
+                    ".claude/hooks", ".claude\\hooks",
+                    "sf-skills",
+                    "shared/hooks", "shared\\hooks",
+                )):
+                    is_sf = True
+                    break
 
             if not is_sf:
                 cleaned.append(hook_group)
@@ -149,9 +149,9 @@ def cleanup_stale_settings_hooks():
             for nested in hook_group.get("hooks", []):
                 cmd = nested.get("command", "")
                 parts = cmd.split()
-                # Find the script path (first part containing '/')
+                # Find the script path (first part containing a path separator)
                 for part in parts[1:]:
-                    if "/" in part:
+                    if "/" in part or "\\" in part:
                         if not Path(part).exists():
                             all_exist = False
                         break

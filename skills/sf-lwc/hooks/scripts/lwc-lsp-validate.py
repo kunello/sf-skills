@@ -23,6 +23,7 @@ Usage:
 import json
 import os
 import sys
+import tempfile
 from pathlib import Path
 from typing import Dict, List, Any, Optional
 
@@ -33,7 +34,7 @@ LSP_ENGINE_PATH = PLUGIN_ROOT.parent / "shared" / "lsp-engine"
 sys.path.insert(0, str(LSP_ENGINE_PATH))
 
 # Track validation attempts to prevent infinite loops
-ATTEMPT_FILE = Path("/tmp/lwc_lsp_attempts.json")
+ATTEMPT_FILE = Path(tempfile.gettempdir()) / "lwc_lsp_attempts.json"
 MAX_ATTEMPTS = 3
 
 # LWC file extensions

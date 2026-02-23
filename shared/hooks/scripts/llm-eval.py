@@ -35,23 +35,20 @@ Note: Requires ANTHROPIC_API_KEY environment variable.
 
 import json
 import os
-import select
 import sys
 from pathlib import Path
 from typing import Optional, Dict, Any, List
 
-
-def read_stdin_safe(timeout_seconds: float = 0.1) -> dict:
-    """Safely read JSON from stdin with timeout to prevent blocking."""
-    if sys.stdin.isatty():
-        return {}
-    try:
-        readable, _, _ = select.select([sys.stdin], [], [], timeout_seconds)
-        if not readable:
+try:
+    from stdin_utils import read_stdin_safe
+except ImportError:
+    def read_stdin_safe(timeout_seconds=0.1):
+        if sys.stdin.isatty():
             return {}
-        return json.load(sys.stdin)
-    except (json.JSONDecodeError, EOFError, OSError, ValueError):
-        return {}
+        try:
+            return json.load(sys.stdin)
+        except Exception:
+            return {}
 
 # Try to import Anthropic SDK
 try:

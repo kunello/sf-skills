@@ -102,9 +102,28 @@ AGENT_PREFIXES = ("fde-", "ps-")  # Agent file prefixes managed by installer
 
 # Temp file patterns to clean
 TEMP_FILE_PATTERNS = [
-    "/tmp/sf-skills-*.json",
-    "/tmp/sfskills-*.json",
+    str(Path(tempfile.gettempdir()) / "sf-skills-*.json"),
+    str(Path(tempfile.gettempdir()) / "sfskills-*.json"),
 ]
+
+
+# ============================================================================
+# PLATFORM HELPERS
+# ============================================================================
+
+def get_python_command() -> str:
+    """Return the Python command appropriate for the current platform.
+
+    On Windows, ``python3`` is not guaranteed to exist — ``sys.executable``
+    gives the actual interpreter path.  On Unix, ``python3`` is the standard.
+    """
+    if sys.platform == "win32":
+        exe = sys.executable
+        # Quote if the path contains spaces (common on Windows)
+        if " " in exe:
+            return f'"{exe}"'
+        return exe
+    return "python3"
 
 
 # ============================================================================
@@ -947,13 +966,16 @@ def cleanup_plugin_dirs(dry_run: bool = False) -> int:
 
 def is_sf_skills_hook(hook: Dict[str, Any]) -> bool:
     """Check if a hook was installed by sf-skills."""
-    # Check for marker
+    # Check for marker (backward compat with older installations)
     if hook.get("_sf_skills"):
         return True
 
-    # Check command path contains sf-skills indicators
+    # Check command path contains sf-skills indicators (forward + backslash variants)
     command = hook.get("command", "")
-    if "sf-skills" in command or "shared/hooks" in command or ".claude/hooks" in command:
+    if any(indicator in command for indicator in (
+        "sf-skills", "shared/hooks", ".claude/hooks",
+        "shared\\hooks", ".claude\\hooks",
+    )):
         return True
 
     # Check nested hooks
@@ -1264,36 +1286,34 @@ def get_hooks_config() -> Dict[str, Any]:
 
     Returns hooks configuration for settings.json.
     """
-    hooks_path = str(HOOKS_DIR)
-    scripts_path = f"{hooks_path}/scripts"
+    # Use forward slashes even on Windows to avoid JSON escape issues
+    scripts_path = (HOOKS_DIR / "scripts").as_posix()
+    python_cmd = get_python_command()
 
     return {
         "SessionStart": [
             {
                 "hooks": [{
                     "type": "command",
-                    "command": f"python3 {scripts_path}/session-init.py",
+                    "command": f"{python_cmd} {scripts_path}/session-init.py",
                     "timeout": 3000
                 }],
-                "_sf_skills": True
             },
             {
                 "hooks": [{
                     "type": "command",
-                    "command": f"python3 {scripts_path}/org-preflight.py",
+                    "command": f"{python_cmd} {scripts_path}/org-preflight.py",
                     "timeout": 30000,
                     "async": True
                 }],
-                "_sf_skills": True
             },
             {
                 "hooks": [{
                     "type": "command",
-                    "command": f"python3 {scripts_path}/lsp-prewarm.py",
+                    "command": f"{python_cmd} {scripts_path}/lsp-prewarm.py",
                     "timeout": 60000,
                     "async": True
                 }],
-                "_sf_skills": True
             }
         ],
         "PreToolUse": [
@@ -1302,16 +1322,15 @@ def get_hooks_config() -> Dict[str, Any]:
                 "hooks": [
                     {
                         "type": "command",
-                        "command": f"python3 {scripts_path}/guardrails.py",
+                        "command": f"{python_cmd} {scripts_path}/guardrails.py",
                         "timeout": 5000
                     },
                     {
                         "type": "command",
-                        "command": f"python3 {scripts_path}/api-version-check.py",
+                        "command": f"{python_cmd} {scripts_path}/api-version-check.py",
                         "timeout": 10000
                     }
                 ],
-                "_sf_skills": True
             },
         ],
         "PostToolUse": [
@@ -1320,11 +1339,10 @@ def get_hooks_config() -> Dict[str, Any]:
                 "hooks": [
                     {
                         "type": "command",
-                        "command": f"python3 {scripts_path}/validator-dispatcher.py",
+                        "command": f"{python_cmd} {scripts_path}/validator-dispatcher.py",
                         "timeout": 10000
                     }
                 ],
-                "_sf_skills": True
             }
         ],
         "PermissionRequest": [
@@ -1332,19 +1350,17 @@ def get_hooks_config() -> Dict[str, Any]:
                 "matcher": "Bash",
                 "hooks": [{
                     "type": "command",
-                    "command": f"python3 {scripts_path}/auto-approve.py",
+                    "command": f"{python_cmd} {scripts_path}/auto-approve.py",
                     "timeout": 5000
                 }],
-                "_sf_skills": True
             },
             {
                 "matcher": "Read",
                 "hooks": [{
                     "type": "command",
-                    "command": f"python3 {scripts_path}/auto-approve.py",
+                    "command": f"{python_cmd} {scripts_path}/auto-approve.py",
                     "timeout": 5000
                 }],
-                "_sf_skills": True
             }
         ],
     }
@@ -1812,7 +1828,7 @@ def update_settings_json(dry_run: bool = False) -> Dict[str, str]:
             if corrupt_backup:
                 print_info(f"Corrupt file backed up to: {corrupt_backup}")
             print_error("Cannot safely modify settings.json — aborting")
-            print_info(f"Fix: python3 {INSTALLER_FILE} --restore-settings")
+            print_info(f"Fix: {get_python_command()} {INSTALLER_FILE} --restore-settings")
             sys.exit(1)
 
     # Upsert hooks
@@ -1857,6 +1873,25 @@ def _validate_settings_write(original_keys: set):
     if missing:
         print_error(f"Settings key loss detected! Missing keys: {', '.join(sorted(missing))}")
         _attempt_auto_restore()
+        return
+
+    # Verify sf-skills hooks survived the write (catches schema stripping)
+    hooks = written.get("hooks", {})
+    if hooks:
+        found_sf = False
+        for event_hooks in hooks.values():
+            for hook in event_hooks:
+                if is_sf_skills_hook(hook):
+                    found_sf = True
+                    break
+            if found_sf:
+                break
+        if not found_sf:
+            print_warning(
+                "sf-skills hooks were written but not detected in settings.json. "
+                "Claude Code may have stripped unrecognized fields. "
+                f"Run {get_python_command()} {INSTALLER_FILE} --diagnose to check."
+            )
 
 
 def _attempt_auto_restore():
@@ -1926,11 +1961,11 @@ def verify_installation() -> Tuple[bool, List[str]]:
             if "hooks" not in settings:
                 issues.append("No hooks in settings.json")
             else:
-                # Check for _sf_skills marker
+                # Check for sf-skills hooks via path heuristic
                 has_sf_hooks = False
                 for event_hooks in settings["hooks"].values():
                     for hook in event_hooks:
-                        if hook.get("_sf_skills"):
+                        if is_sf_skills_hook(hook):
                             has_sf_hooks = True
                             break
                 if not has_sf_hooks:
@@ -1939,7 +1974,7 @@ def verify_installation() -> Tuple[bool, List[str]]:
                 # Check for stale hooks referencing missing script files
                 for event_name, event_hooks in settings["hooks"].items():
                     for hook_group in event_hooks:
-                        if not hook_group.get("_sf_skills"):
+                        if not is_sf_skills_hook(hook_group):
                             continue
                         for nested_hook in hook_group.get("hooks", []):
                             cmd = nested_hook.get("command", "")
@@ -2718,7 +2753,7 @@ def cmd_status() -> int:
                 sf_hook_count = 0
                 for event_hooks in settings["hooks"].values():
                     for hook in event_hooks:
-                        if hook.get("_sf_skills"):
+                        if is_sf_skills_hook(hook):
                             sf_hook_count += 1
                 print(f"Settings:    {SETTINGS_FILE} {c('✓', Colors.GREEN)} ({sf_hook_count} hook configs)")
             else:
@@ -2841,7 +2876,7 @@ def cmd_diagnose() -> int:
             if "hooks" in settings:
                 sf_count = sum(
                     1 for ev in settings["hooks"].values()
-                    for h in ev if h.get("_sf_skills")
+                    for h in ev if is_sf_skills_hook(h)
                 )
                 print(f"   {c('✅', Colors.GREEN)} sf-skills hooks registered: {sf_count}")
             else:
@@ -2850,7 +2885,7 @@ def cmd_diagnose() -> int:
 
         except json.JSONDecodeError as e:
             print(f"   {c('❌', Colors.RED)} Invalid JSON (line {e.lineno}, col {e.colno}): {e.msg}")
-            print(f"      Fix: python3 {INSTALLER_FILE} --restore-settings")
+            print(f"      Fix: {get_python_command()} {INSTALLER_FILE} --restore-settings")
             issues += 1
 
     # ── Check 2: Hook scripts ──
@@ -2885,7 +2920,7 @@ def cmd_diagnose() -> int:
             settings_check = json.loads(SETTINGS_FILE.read_text())
             for ev_name, ev_hooks in settings_check.get("hooks", {}).items():
                 for hook_group in ev_hooks:
-                    if not hook_group.get("_sf_skills"):
+                    if not is_sf_skills_hook(hook_group):
                         continue
                     for nested_hook in hook_group.get("hooks", []):
                         cmd = nested_hook.get("command", "")

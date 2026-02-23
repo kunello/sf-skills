@@ -11,7 +11,6 @@ Usage:
 """
 
 import json
-import select
 import sys
 
 
@@ -37,12 +36,17 @@ def read_stdin_safe(timeout_seconds: float = 0.1) -> dict:
         return {}
 
     try:
-        # Use select to check if stdin has data (Unix only)
-        readable, _, _ = select.select([sys.stdin], [], [], timeout_seconds)
-        if not readable:
-            return {}
-
-        # Read and parse
-        return json.load(sys.stdin)
+        if sys.platform == "win32":
+            # On Windows, piped stdin is fully buffered — json.load reads
+            # until EOF without blocking.  select.select() only works on
+            # sockets on Windows, so we skip the readiness check entirely.
+            return json.load(sys.stdin)
+        else:
+            import select
+            # Use select to check if stdin has data (Unix only)
+            readable, _, _ = select.select([sys.stdin], [], [], timeout_seconds)
+            if not readable:
+                return {}
+            return json.load(sys.stdin)
     except (json.JSONDecodeError, EOFError, OSError, ValueError):
         return {}

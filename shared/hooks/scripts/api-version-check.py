@@ -28,29 +28,27 @@ Installation:
 import json
 import os
 import re
-import select
 import subprocess
 import sys
+import tempfile
 import time
 from pathlib import Path
 from typing import Dict, Optional, Tuple
 
-
-def read_stdin_safe(timeout_seconds: float = 0.1) -> dict:
-    """Safely read JSON from stdin with timeout to prevent blocking."""
-    if sys.stdin.isatty():
-        return {}
-    try:
-        readable, _, _ = select.select([sys.stdin], [], [], timeout_seconds)
-        if not readable:
+try:
+    from stdin_utils import read_stdin_safe
+except ImportError:
+    def read_stdin_safe(timeout_seconds=0.1):
+        if sys.stdin.isatty():
             return {}
-        return json.load(sys.stdin)
-    except (json.JSONDecodeError, EOFError, OSError, ValueError):
-        return {}
+        try:
+            return json.load(sys.stdin)
+        except Exception:
+            return {}
 
 
 # Configuration
-CACHE_FILE = Path("/tmp/sf-skills-org-api-version-cache.json")
+CACHE_FILE = Path(tempfile.gettempdir()) / "sf-skills-org-api-version-cache.json"
 CACHE_TTL_SECONDS = 3600  # 1 hour
 VERSION_MISMATCH_WARN_THRESHOLD = 2  # Warn if difference > 2 versions
 

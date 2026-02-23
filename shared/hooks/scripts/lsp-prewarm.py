@@ -10,7 +10,7 @@ handshake and stays running for quick first-use response.
 BEHAVIOR:
 - Spawns Apex, LWC, and AgentScript LSP servers in background
 - Sends LSP initialize handshake to prime each server
-- Stores PIDs in /tmp/sf-skills-lsp-pids.json for cleanup
+- Stores PIDs in a temp file for cleanup
 - Servers auto-terminate after 10 minutes of inactivity
 - Reports which servers were successfully prewarm'd
 
@@ -32,27 +32,26 @@ Prerequisites:
 
 import json
 import os
-import select
+import shutil
 import signal
 import subprocess
 import sys
+import tempfile
 import time
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
-
-def read_stdin_safe(timeout_seconds: float = 0.1) -> dict:
-    """Safely read JSON from stdin with timeout to prevent blocking."""
-    if sys.stdin.isatty():
-        return {}
-    try:
-        readable, _, _ = select.select([sys.stdin], [], [], timeout_seconds)
-        if not readable:
+try:
+    from stdin_utils import read_stdin_safe
+except ImportError:
+    def read_stdin_safe(timeout_seconds=0.1):
+        if sys.stdin.isatty():
             return {}
-        return json.load(sys.stdin)
-    except (json.JSONDecodeError, EOFError, OSError, ValueError):
-        return {}
+        try:
+            return json.load(sys.stdin)
+        except Exception:
+            return {}
 
 
 def find_sfdx_project_root() -> Optional[Path]:
@@ -66,7 +65,7 @@ def find_sfdx_project_root() -> Optional[Path]:
 
 
 # Configuration
-PID_FILE = Path("/tmp/sf-skills-lsp-pids.json")
+PID_FILE = Path(tempfile.gettempdir()) / "sf-skills-lsp-pids.json"
 PREWARM_TIMEOUT = 10  # Max seconds to wait for each server init
 MODULE_DIR = Path(__file__).parent.parent.parent / "lsp-engine"
 
@@ -101,7 +100,13 @@ LSP_SERVERS = {
 
 
 def find_wrapper(wrapper_name: str) -> Optional[Path]:
-    """Find the LSP wrapper script."""
+    """Find the LSP wrapper script.
+
+    Returns None on Windows since .sh wrappers require bash.
+    LSP prewarm is an optimization — hooks fall back to syntax-only validation.
+    """
+    if sys.platform == "win32":
+        return None
     wrapper_path = MODULE_DIR / wrapper_name
     if wrapper_path.exists() and os.access(wrapper_path, os.X_OK):
         return wrapper_path
@@ -109,21 +114,56 @@ def find_wrapper(wrapper_name: str) -> Optional[Path]:
 
 
 def find_java_binary() -> Optional[str]:
-    """Find Java binary, checking Homebrew paths first (same logic as apex_wrapper.sh)."""
-    # Prioritize Homebrew OpenJDK over /usr/local/bin/java which may be a stub
-    candidates = [
-        "/opt/homebrew/opt/openjdk@21/bin/java",
-        "/opt/homebrew/opt/openjdk@17/bin/java",
-        "/opt/homebrew/opt/openjdk@11/bin/java",
-        "/opt/homebrew/opt/openjdk/bin/java",
-        str(Path.home() / ".sdkman/candidates/java/current/bin/java"),
-        "/usr/bin/java",
-        "/usr/local/bin/java",  # Last - may be Salesforce stub
-    ]
-    for candidate in candidates:
-        if os.path.isfile(candidate) and os.access(candidate, os.X_OK):
-            return candidate
-    return None
+    """Find Java binary (cross-platform).
+
+    Checks JAVA_HOME first, then platform-specific well-known paths,
+    then falls back to shutil.which().
+    """
+    # Check JAVA_HOME first (cross-platform)
+    java_home = os.environ.get("JAVA_HOME")
+    if java_home:
+        java_bin = os.path.join(java_home, "bin", "java")
+        if sys.platform == "win32":
+            java_bin += ".exe"
+        if os.path.isfile(java_bin) and os.access(java_bin, os.X_OK):
+            return java_bin
+
+    if sys.platform == "win32":
+        # Common Windows JDK locations
+        candidates = []
+        program_files = os.environ.get("ProgramFiles", r"C:\Program Files")
+        program_files_x86 = os.environ.get("ProgramFiles(x86)", r"C:\Program Files (x86)")
+        for pf in [program_files, program_files_x86]:
+            for vendor in ["Java", "Eclipse Adoptium", "Microsoft", "Amazon Corretto", "Zulu"]:
+                vendor_dir = os.path.join(pf, vendor)
+                if os.path.isdir(vendor_dir):
+                    try:
+                        for entry in sorted(os.listdir(vendor_dir), reverse=True):
+                            candidate = os.path.join(vendor_dir, entry, "bin", "java.exe")
+                            if os.path.isfile(candidate):
+                                candidates.append(candidate)
+                    except OSError:
+                        pass
+        for candidate in candidates:
+            if os.access(candidate, os.X_OK):
+                return candidate
+    else:
+        # macOS/Linux — Homebrew, sdkman, system
+        candidates = [
+            "/opt/homebrew/opt/openjdk@21/bin/java",
+            "/opt/homebrew/opt/openjdk@17/bin/java",
+            "/opt/homebrew/opt/openjdk@11/bin/java",
+            "/opt/homebrew/opt/openjdk/bin/java",
+            str(Path.home() / ".sdkman/candidates/java/current/bin/java"),
+            "/usr/bin/java",
+            "/usr/local/bin/java",  # Last - may be Salesforce stub
+        ]
+        for candidate in candidates:
+            if os.path.isfile(candidate) and os.access(candidate, os.X_OK):
+                return candidate
+
+    # Final fallback: shutil.which (finds java on PATH)
+    return shutil.which("java")
 
 
 def check_java_available() -> bool:
@@ -173,7 +213,8 @@ def spawn_lsp_server(server_id: str, config: Dict) -> Tuple[bool, str, Optional[
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             bufsize=0,
-            start_new_session=True,  # Detach from parent
+            # start_new_session is Unix-only (setsid); skip on Windows
+            start_new_session=(sys.platform != "win32"),
         )
 
         # Send initialize request
@@ -261,13 +302,21 @@ def cleanup_old_servers():
             with open(PID_FILE, "r") as f:
                 data = json.load(f)
 
-            # Kill old processes
+            # Kill old processes (platform-aware)
             for server_id, pid in data.get("pids", {}).items():
                 try:
-                    os.kill(pid, signal.SIGTERM)
+                    if sys.platform == "win32":
+                        subprocess.run(
+                            ["taskkill", "/F", "/PID", str(pid)],
+                            capture_output=True, timeout=5,
+                        )
+                    else:
+                        os.kill(pid, signal.SIGTERM)
                 except ProcessLookupError:
                     pass  # Already dead
                 except PermissionError:
+                    pass
+                except Exception:
                     pass
 
             PID_FILE.unlink()
@@ -328,15 +377,29 @@ def is_clear_event(input_data: dict) -> bool:
 
 
 def is_pid_alive(pid: int) -> bool:
-    """Check if a process is still running."""
-    try:
-        os.kill(pid, 0)  # Signal 0 = check existence
-        return True
-    except (OSError, ProcessLookupError):
-        return False
-    except PermissionError:
-        # Process exists but we can't signal it (different user)
-        return True
+    """Check if a process is still running (cross-platform)."""
+    if sys.platform == "win32":
+        try:
+            import ctypes
+            PROCESS_QUERY_LIMITED_INFORMATION = 0x1000
+            handle = ctypes.windll.kernel32.OpenProcess(
+                PROCESS_QUERY_LIMITED_INFORMATION, False, pid
+            )
+            if handle:
+                ctypes.windll.kernel32.CloseHandle(handle)
+                return True
+            return False
+        except (OSError, AttributeError):
+            return False
+    else:
+        try:
+            os.kill(pid, 0)  # Signal 0 = check existence
+            return True
+        except (OSError, ProcessLookupError):
+            return False
+        except PermissionError:
+            # Process exists but we can't signal it (different user)
+            return True
 
 
 def should_skip_on_clear(input_data: dict) -> bool:
