@@ -92,6 +92,7 @@ GITHUB_OWNER = "Jaganpro"
 GITHUB_REPO = "sf-skills"
 GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_OWNER}/{GITHUB_REPO}"
 GITHUB_RAW_URL = f"https://raw.githubusercontent.com/{GITHUB_OWNER}/{GITHUB_REPO}/main"
+_NPX_SOURCE_PREFIX = f"{GITHUB_OWNER}/{GITHUB_REPO}"
 
 # Files to install (source layout paths)
 HOOKS_SRC_DIR = "shared/hooks"
@@ -138,6 +139,21 @@ class InstallState:
     LEGACY = "legacy"            # Old sf-skills-hooks install
     CORRUPTED = "corrupted"      # Exists but missing fingerprint
     NPX = "npx"                  # npx skills add (lock file present, no .sf-skills.json)
+
+
+def _skill_source(entry) -> str:
+    """Extract source from an npx skill lock entry (dict or string)."""
+    if isinstance(entry, dict):
+        return entry.get("source", "")
+    return str(entry)
+
+
+def _skill_name(entry) -> str:
+    """Extract skill name from an npx skill lock entry (dict or string)."""
+    if isinstance(entry, dict):
+        return entry.get("name", "")
+    parts = str(entry).split("/")
+    return parts[2] if len(parts) > 2 else ""
 
 
 # ============================================================================
@@ -313,7 +329,7 @@ def detect_state() -> Tuple[str, Optional[str]]:
         try:
             lock_data = json.loads(NPX_SKILL_LOCK.read_text())
             skills = lock_data.get("skills", [])
-            if any(s.get("source", "").startswith("Jaganpro/sf-skills") for s in skills):
+            if any(_skill_source(s).startswith(_NPX_SOURCE_PREFIX) for s in skills):
                 return InstallState.NPX, None
         except (json.JSONDecodeError, IOError):
             pass
@@ -888,14 +904,14 @@ def cleanup_npx(dry_run: bool = False) -> int:
         return 0
 
     skills = lock_data.get("skills", [])
-    sf_entries = [s for s in skills if s.get("source", "").startswith("Jaganpro/sf-skills")]
+    sf_entries = [s for s in skills if _skill_source(s).startswith(_NPX_SOURCE_PREFIX)]
 
     if not sf_entries:
         return 0
 
     cleaned = 0
     for entry in sf_entries:
-        skill_name = entry.get("name", "")
+        skill_name = _skill_name(entry)
         if not skill_name:
             continue
 
@@ -910,7 +926,7 @@ def cleanup_npx(dry_run: bool = False) -> int:
 
     if not dry_run:
         # Remove sf-skills entries from lock file, preserve others
-        remaining = [s for s in skills if not s.get("source", "").startswith("Jaganpro/sf-skills")]
+        remaining = [s for s in skills if not _skill_source(s).startswith(_NPX_SOURCE_PREFIX)]
         if remaining:
             lock_data["skills"] = remaining
             NPX_SKILL_LOCK.write_text(json.dumps(lock_data, indent=2))
