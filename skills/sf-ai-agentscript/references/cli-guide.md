@@ -17,8 +17,8 @@
 | `sf agent generate agent-spec` | Generate agent specification | `sf agent generate agent-spec --type customer --role "Service Rep" --output-file agent-spec.yaml` |
 | `sf agent generate authoring-bundle` | Scaffold authoring bundle | `sf agent generate authoring-bundle --no-spec --name "My Agent" -o TARGET_ORG --json` |
 | `sf agent generate template` | Generate agent template (ISV packaging) | `sf agent generate template --agent-file MyAgent.agent --agent-version 1.0 --json` |
-| `sf agent activate` | Activate agent (make live) | `sf agent activate --api-name MyAgent -o TARGET_ORG --json` |
-| `sf agent deactivate` | Deactivate agent (take offline) | `sf agent deactivate --api-name MyAgent -o TARGET_ORG --json` |
+| `sf agent activate` | Activate agent (make live) | `sf agent activate --api-name MyAgent -o TARGET_ORG` |
+| `sf agent deactivate` | Deactivate agent (take offline) | `sf agent deactivate --api-name MyAgent -o TARGET_ORG` |
 | `sf agent preview start` | Start programmatic preview session | `sf agent preview start --api-name MyAgent -o TARGET_ORG --json` (or `--authoring-bundle`) |
 | `sf agent preview send` | Send utterance to preview session | `sf agent preview send --session-id <id> --utterance "Hello" --json` |
 | `sf agent preview end` | End preview session | `sf agent preview end --session-id <id> --json` |
@@ -116,6 +116,20 @@ sf agent publish authoring-bundle --api-name ProntoRefund -o TARGET_ORG --json
 ```
 
 > ⚠️ Do NOT use `sf project deploy start` - it will fail with "Required fields are missing: [BundleType]"
+
+### Step 5: Activate
+
+> ⚠️ **Publishing does NOT activate.** The new BotVersion is created as `Inactive`. Tests, preview, and end users continue hitting the previously active version until you explicitly activate.
+
+```bash
+# Activate the latest published version
+sf agent activate --api-name ProntoRefund -o TARGET_ORG
+
+# Verify activation (optional)
+sf data query --query "SELECT DeveloperName, VersionNumber, Status FROM BotVersion WHERE BotDefinition.DeveloperName = 'ProntoRefund' AND Status = 'Active' LIMIT 1" -o TARGET_ORG --json
+```
+
+> ℹ️ `sf agent activate` and `sf agent deactivate` do **not** support `--json`. The command prints a plain-text confirmation message on success.
 
 ---
 
@@ -298,21 +312,28 @@ sf agent preview end --session-id $SESSION_ID --json
 
 After publishing, activate the agent to make it live. Deactivate before re-publishing updates.
 
+> ⚠️ **`--json` is NOT supported** on `sf agent activate` / `sf agent deactivate`. These commands output plain text only.
+
 ```bash
 # Activate agent (makes it live for end users)
-sf agent activate --api-name MyAgent -o TARGET_ORG --json
+sf agent activate --api-name MyAgent -o TARGET_ORG
 
 # Deactivate agent (takes it offline — required before re-publishing)
-sf agent deactivate --api-name MyAgent -o TARGET_ORG --json
+sf agent deactivate --api-name MyAgent -o TARGET_ORG
+```
+
+**Verify activation status**:
+```bash
+sf data query --query "SELECT DeveloperName, VersionNumber, Status FROM BotVersion WHERE BotDefinition.DeveloperName = 'MyAgent' AND Status = 'Active' LIMIT 1" -o TARGET_ORG --json
 ```
 
 **Full update lifecycle**: Deactivate → Re-publish → Re-activate
 
 ```bash
 # Update an already-active agent:
-sf agent deactivate --api-name MyAgent -o TARGET_ORG --json
+sf agent deactivate --api-name MyAgent -o TARGET_ORG
 sf agent publish authoring-bundle --api-name MyAgent -o TARGET_ORG --json
-sf agent activate --api-name MyAgent -o TARGET_ORG --json
+sf agent activate --api-name MyAgent -o TARGET_ORG
 ```
 
 ---

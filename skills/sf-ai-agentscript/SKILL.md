@@ -249,7 +249,9 @@ Batch testing (up to 100 cases), quality metrics (Completeness, Coherence, Topic
 1. **Create bundle directory**: `force-app/main/default/aiAuthoringBundles/AgentName/`
 2. **Add files**: `AgentName.agent` + `AgentName.bundle-meta.xml` (NOT `.aiAuthoringBundle-meta.xml`)
 3. **Publish**: `sf agent publish authoring-bundle --api-name AgentName -o TARGET_ORG --json`
-4. **Activate**: `sf agent activate --api-name AgentName -o TARGET_ORG --json`
+4. **Activate**: `sf agent activate --api-name AgentName -o TARGET_ORG` _(no `--json` support)_
+
+> ⚠️ **Publishing does NOT activate.** After `sf agent publish`, the new BotVersion is `Inactive`. Tests and preview run against the previous active version. You MUST run `sf agent activate` separately.
 
 **Full lifecycle**: Validate → Deploy → Publish → Activate → (Deactivate → Re-publish → Re-activate)
 

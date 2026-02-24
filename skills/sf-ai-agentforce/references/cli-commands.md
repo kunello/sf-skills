@@ -20,7 +20,7 @@ This document covers all `sf agent` CLI commands relevant to the Agentforce plat
 Makes a published agent available to users.
 
 ```bash
-sf agent activate --api-name <AgentApiName> --target-org <alias> --json
+sf agent activate --api-name <AgentApiName> --target-org <alias>
 ```
 
 | Flag | Required | Description |
@@ -28,7 +28,7 @@ sf agent activate --api-name <AgentApiName> --target-org <alias> --json
 | `--api-name` | Yes | API name of the agent to activate |
 | `--target-org` | Yes | Alias or username of the target org |
 | `--api-version` | No | Override the API version used for the request |
-| `--json` | No | Return output as JSON (recommended) |
+| `--json` | No | ⚠️ Not supported — outputs nothing. Omit this flag. |
 
 **Prerequisites:** Agent must be published first via `sf agent publish authoring-bundle`.
 
@@ -37,7 +37,7 @@ sf agent activate --api-name <AgentApiName> --target-org <alias> --json
 Deactivates an active agent. Required before making changes to topics, actions, or system instructions.
 
 ```bash
-sf agent deactivate --api-name <AgentApiName> --target-org <alias> --json
+sf agent deactivate --api-name <AgentApiName> --target-org <alias>
 ```
 
 | Flag | Required | Description |
@@ -45,7 +45,7 @@ sf agent deactivate --api-name <AgentApiName> --target-org <alias> --json
 | `--api-name` | Yes | API name of the agent to deactivate |
 | `--target-org` | Yes | Alias or username of the target org |
 | `--api-version` | No | Override the API version used for the request |
-| `--json` | No | Return output as JSON (recommended) |
+| `--json` | No | ⚠️ Not supported — outputs nothing. Omit this flag. |
 
 ### sf agent create
 

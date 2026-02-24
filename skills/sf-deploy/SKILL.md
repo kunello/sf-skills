@@ -295,10 +295,12 @@ sf project deploy start --metadata Agent:[AgentName] --target-org [alias] --json
 
 ```bash
 # Activate agent (makes available to users)
-sf agent activate --api-name [AgentName] --target-org [alias] --json
+sf agent activate --api-name [AgentName] --target-org [alias]
 
 # Deactivate agent (REQUIRED before making changes)
-sf agent deactivate --api-name [AgentName] --target-org [alias] --json
+sf agent deactivate --api-name [AgentName] --target-org [alias]
+
+# ⚠️ Note: activate/deactivate do NOT support --json. Plain text output only.
 
 # Preview agent (simulated mode - safe testing) — interactive, no --json
 sf agent preview --api-name [AgentName] --target-org [alias]
@@ -329,7 +331,7 @@ sf agent publish authoring-bundle --api-name [AgentName] --target-org [alias] --
 sf agent preview --api-name [AgentName] --target-org [alias]
 
 # 6. Activate
-sf agent activate --api-name [AgentName] --target-org [alias] --json
+sf agent activate --api-name [AgentName] --target-org [alias]
 ```
 
 #### Modifying Existing Agents
@@ -338,7 +340,7 @@ sf agent activate --api-name [AgentName] --target-org [alias] --json
 
 ```bash
 # 1. Deactivate
-sf agent deactivate --api-name [AgentName] --target-org [alias] --json
+sf agent deactivate --api-name [AgentName] --target-org [alias]
 
 # 2. Make changes to Agent Script
 
@@ -346,7 +348,7 @@ sf agent deactivate --api-name [AgentName] --target-org [alias] --json
 sf agent publish authoring-bundle --api-name [AgentName] --target-org [alias] --json
 
 # 4. Re-activate
-sf agent activate --api-name [AgentName] --target-org [alias] --json
+sf agent activate --api-name [AgentName] --target-org [alias]
 ```
 
 #### Sync Agent Between Orgs
@@ -365,7 +367,7 @@ sf project deploy start --metadata Agent:[AgentName] --target-org target-org --j
 sf agent publish authoring-bundle --api-name [AgentName] --target-org target-org --json
 
 # 5. Activate in target org
-sf agent activate --api-name [AgentName] --target-org target-org --json
+sf agent activate --api-name [AgentName] --target-org target-org
 ```
 
 #### Agent-Specific CLI Reference
@@ -374,8 +376,8 @@ sf agent activate --api-name [AgentName] --target-org target-org --json
 |---------|-------------|
 | `sf agent publish authoring-bundle --api-name X --json` | Publish authoring bundle |
 | `sf agent publish authoring-bundle --api-name X --skip-retrieve --json` | Publish without retrieving metadata (CI/CD) |
-| `sf agent activate --api-name X --json` | Activate published agent |
-| `sf agent deactivate --api-name X --json` | Deactivate agent for changes |
+| `sf agent activate --api-name X` | Activate published agent _(no `--json` support)_ |
+| `sf agent deactivate --api-name X` | Deactivate agent for changes _(no `--json` support)_ |
 | `sf agent preview --api-name X` | Preview agent behavior (interactive — no `--json`) |
 | `sf agent preview --authoring-bundle <path>` | Preview from local authoring bundle (interactive — no `--json`) |
 | `sf agent validate authoring-bundle --api-name X --json` | Validate Agent Script syntax |

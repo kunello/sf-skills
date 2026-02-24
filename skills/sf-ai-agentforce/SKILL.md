@@ -137,8 +137,8 @@ Manage agent state via CLI (requires agent to be published first):
 
 | Command | Purpose |
 |---------|---------|
-| `sf agent activate --api-name X --target-org Y --json` | Activate a published agent |
-| `sf agent deactivate --api-name X --target-org Y --json` | Deactivate an active agent |
+| `sf agent activate --api-name X --target-org Y` | Activate a published agent _(no `--json` support)_ |
+| `sf agent deactivate --api-name X --target-org Y` | Deactivate an active agent _(no `--json` support)_ |
 
 > **Note**: `sf agent create --spec <file>` exists but is NOT recommended — agents created this way don't use Agent Script and are less flexible. Use the authoring-bundle workflow instead.
 
