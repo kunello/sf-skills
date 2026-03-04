@@ -6,8 +6,8 @@ description: >
   uses Agent Script CLI (sf agent generate/publish), or asks about deterministic
   agent patterns, slot filling, or instruction resolution.
   DO NOT TRIGGER when: Setup UI agent building (use sf-ai-agentforce), agent
-  testing (use sf-ai-agentforce-testing), or conversation design
-  (use sf-ai-agentforce-conversationdesign).
+  testing (use sf-ai-agentforce-testing), or persona design
+  (use sf-ai-agentforce-persona).
 license: MIT
 compatibility: "Requires Agentforce license, API v66.0+, Einstein Agent User"
 metadata:

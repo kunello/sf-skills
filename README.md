@@ -37,7 +37,7 @@ A collection of reusable skills for **Agentic Salesforce Development**, enabling
 ### 🤖 AI & Automation
 
 - **[sf-ai-agentscript](skills/sf-ai-agentscript/)** — Agent Script DSL, FSM patterns
-- **[sf-ai-agentforce-conversationdesign](skills/sf-ai-agentforce-conversationdesign/)** — Persona docs, utterance libraries, guardrails
+- **[sf-ai-agentforce-persona](skills/sf-ai-agentforce-persona/)** — Deep persona design, identity framework, Agent Builder encoding
 - **[sf-ai-agentforce-observability](skills/sf-ai-agentforce-observability/)** — Session tracing (Data Cloud)
 - **[sf-ai-agentforce-testing](skills/sf-ai-agentforce-testing/)** — Agent test specs, agentic fix loops
 - **[sf-ai-agentforce](skills/sf-ai-agentforce/)** — Agent Builder, PromptTemplate, Models API
@@ -58,7 +58,7 @@ Seven specialized Claude Code agents for Salesforce implementations, installed t
 |-------|------|------|------------|
 | **fde-strategist** | Orchestrator — plans, researches, delegates | `plan` | sf-ai-agentforce, sf-diagram-mermaid |
 | **fde-engineer** | Agent config, metadata, Apex, Agent Scripts | `acceptEdits` | sf-ai-agentforce, sf-ai-agentscript |
-| **fde-experience-specialist** | Conversation design, persona, UX, LWC | `acceptEdits` | sf-ai-agentforce-conversationdesign, sf-lwc |
+| **fde-experience-specialist** | Conversation design, persona, UX, LWC | `acceptEdits` | sf-ai-agentforce-persona, sf-lwc |
 
 ### Cross-Cutting (Serve Both Teams)
 
@@ -510,7 +510,7 @@ sf-industry-{name}        # Industries (healthcare, finserv)
 | 🧪 | `sf-ai-agentforce-testing` | Agent test specs, agentic fix loops | ✅ Live |
 | 📈 | `sf-ai-agentforce-observability` | Session tracing extraction & analysis (Data Cloud) | ✅ Live |
 | 📝 | `sf-ai-agentscript` | Agent Script DSL, FSM patterns, 100-pt scoring | ✅ Live |
-| 💬 | `sf-ai-agentforce-conversationdesign` | Persona docs, utterance libraries, guardrails | ✅ Live |
+| 💬 | `sf-ai-agentforce-persona` | Deep persona design, identity framework, Agent Builder encoding | ✅ Live |
 | 🧠 | `sf-ai-copilot` | Einstein Copilot, Prompts | 📋 Planned |
 | 🔮 | `sf-ai-einstein` | Prediction Builder, NBA | 📋 Planned |
 

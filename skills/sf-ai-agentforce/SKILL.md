@@ -6,8 +6,8 @@ description: >
   writes PromptTemplates, or touches .genAiFunction/.genAiPlugin/.promptTemplate
   metadata XML files.
   DO NOT TRIGGER when: Agent Script DSL .agent files (use sf-ai-agentscript),
-  agent testing (use sf-ai-agentforce-testing), or conversation design
-  (use sf-ai-agentforce-conversationdesign).
+  agent testing (use sf-ai-agentforce-testing), or persona design
+  (use sf-ai-agentforce-persona).
 license: MIT
 compatibility: "Requires API v66.0+ (Spring '26)"
 metadata:

@@ -8,7 +8,7 @@ permissionMode: acceptEdits
 tools: Read, Edit, Write, Bash, Grep, Glob
 disallowedTools: Task, WebSearch
 skills:
-  - sf-ai-agentforce-conversationdesign
+  - sf-ai-agentforce-persona
   - sf-ai-agentforce
   - sf-lwc
   - sf-diagram-nanobananapro

@@ -207,41 +207,39 @@
       "triggerWhen": "user creates/edits LWC components, touches lwc/**/*.js, .html, .css, .js-meta.xml files, or asks about wire service, SLDS, or Jest LWC tests",
       "doNotTriggerWhen": "Apex classes (use sf-apex), Aura components, or Visualforce"
     },
-    "sf-ai-agentforce-conversationdesign": {
+    "sf-ai-agentforce-persona": {
       "keywords": [
+        "persona",
+        "agent personality",
+        "agent identity",
+        "tone register",
+        "communication style",
+        "brand voice",
+        "persona document",
+        "persona encoding",
+        "persona framework",
         "conversation design",
         "dialog design",
-        "persona",
-        "utterance",
-        "escalation",
-        "topic design",
-        "instruction writing",
-        "guardrails",
-        "agent UX",
-        "conversation quality",
-        "tone",
-        "agentforce design"
+        "agent tone"
       ],
       "intentPatterns": [
-        "design.*conversation",
-        "write.*instruction",
         "create.*persona",
-        "improve.*agent.*quality",
-        "review.*topic",
-        "utterance.*library",
-        "escalation.*matrix",
+        "design.*persona",
+        "build.*persona",
+        "define.*personality",
+        "define.*agent.*identity",
+        "encode.*persona",
         "agent.*tone",
-        "conversation.*flow"
+        "agent.*personality"
       ],
       "filePatterns": [
         "persona.*\\.md$",
-        "utterance.*\\.csv$",
-        "escalation.*\\.md$",
-        "scorecard.*\\.md$"
+        "persona-framework.*\\.md$",
+        "persona-encoding.*\\.md$"
       ],
       "priority": "high",
-      "description": "Conversation design for Agentforce agents \u2014 personas, topics, instructions, utterances, escalation, guardrails",
-      "triggerWhen": "user designs agent personas, writes topic instructions, creates utterance libraries, builds escalation matrices, or reviews agent conversation quality",
+      "description": "Deep persona design for Agentforce \u2014 identity, dimensions, phrase book, scoring, Agent Builder encoding",
+      "triggerWhen": "user designs agent personas, defines agent personality/identity, creates persona documents, encodes persona into Agent Builder fields, or asks about agent tone/voice/register",
       "doNotTriggerWhen": "building agent metadata (use sf-ai-agentforce), testing agents (use sf-ai-agentforce-testing), or Agent Script DSL (use sf-ai-agentscript)"
     },
     "sf-ai-agentforce": {
@@ -274,7 +272,7 @@
       "priority": "medium",
       "description": "Standard Agentforce platform skill for Setup UI agent building, PromptTemplate, Models API, and GenAi metadata",
       "triggerWhen": "user configures agents in Agent Builder, creates topics/actions, writes PromptTemplates, or touches .genAiFunction/.genAiPlugin/.promptTemplate metadata XML",
-      "doNotTriggerWhen": "Agent Script DSL .agent files (use sf-ai-agentscript), agent testing (use sf-ai-agentforce-testing), or conversation design (use sf-ai-agentforce-conversationdesign)"
+      "doNotTriggerWhen": "Agent Script DSL .agent files (use sf-ai-agentscript), agent testing (use sf-ai-agentforce-testing), or persona design (use sf-ai-agentforce-persona)"
     },
     "sf-metadata": {
       "keywords": [
@@ -746,7 +744,7 @@
       "priority": "high",
       "description": "Agent Script DSL for deterministic Agentforce agents",
       "triggerWhen": "user writes or edits .agent files, builds FSM-based agents, uses Agent Script CLI (sf agent generate/publish), or asks about deterministic agent patterns",
-      "doNotTriggerWhen": "Setup UI agent building (use sf-ai-agentforce), agent testing (use sf-ai-agentforce-testing), or conversation design (use sf-ai-agentforce-conversationdesign)"
+      "doNotTriggerWhen": "Setup UI agent building (use sf-ai-agentforce), agent testing (use sf-ai-agentforce-testing), or persona design (use sf-ai-agentforce-persona)"
     },
     "sf-permissions": {
       "keywords": [

@@ -24,7 +24,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 # All 20 skill dirs with claude-code-hooks
 SKILL_DIRS = [
     "sf-ai-agentforce",
-    "sf-ai-agentforce-conversationdesign",
+    "sf-ai-agentforce-persona",
     "sf-ai-agentforce-observability",
     "sf-ai-agentforce-testing",
     "sf-ai-agentscript",
