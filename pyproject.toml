@@ -32,10 +32,7 @@ build-backend = "setuptools.build_meta"
 # This project is a collection of skills (not a Python package)
 # We only use pyproject.toml for pytest/tool configuration
 py-modules = []
-
-[tool.setuptools.packages.find]
-where = ["tests"]
-include = ["tests*"]
+packages = []
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
