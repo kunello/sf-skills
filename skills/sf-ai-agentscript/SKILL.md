@@ -270,6 +270,17 @@ For Service Agents, confirm all four before publish:
 
 The write/edit validator now enforces this automatically against the configured validation org (`metadata.validation_org` in this skill, or `AGENTSCRIPT_VALIDATION_ORG` / `SF_TARGET_ORG` env override). Employee Agents are exempt and instead must omit `default_agent_user` entirely.
 
+Validator output is now grouped into human-readable sections:
+- **Structure**
+- **Agent identity**
+- **Targets & permissions**
+- **Runtime gotchas**
+
+It also prints a final recommendation such as:
+- `Fix blocking issues before preview/publish`
+- `Safe to preview. Review warnings before publish`
+- `Safe to preview and publish`
+
 For Service Agents with targets, the validator also checks:
 - `AgentforceServiceAgentUser` permission set/group assignment on the agent user
 - custom `{AgentName}_Access` assignment when target-backed actions are present

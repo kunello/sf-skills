@@ -1067,20 +1067,20 @@ class AgentScriptValidator:
         issues = self.errors if severity == "error" else self.warnings
         return [message for _, _, message in issues]
 
-    def _checklist_entry(self, label: str, error_terms: List[str], warning_terms: Optional[List[str]] = None, success_detail: str = "No issues found.", na_detail: Optional[str] = None, applicable: bool = True) -> Dict[str, str]:
+    def _checklist_entry(self, section: str, label: str, error_terms: List[str], warning_terms: Optional[List[str]] = None, success_detail: str = "No issues found.", na_detail: Optional[str] = None, applicable: bool = True) -> Dict[str, str]:
         if not applicable:
-            return {"status": "info", "icon": "ℹ️", "label": label, "detail": na_detail or "Not applicable."}
+            return {"section": section, "status": "info", "icon": "ℹ️", "label": label, "detail": na_detail or "Not applicable."}
 
         warning_terms = warning_terms or error_terms
         error_matches = [msg for msg in self._issue_texts("error") if any(term in msg for term in error_terms)]
         if error_matches:
-            return {"status": "error", "icon": "❌", "label": label, "detail": error_matches[0]}
+            return {"section": section, "status": "error", "icon": "❌", "label": label, "detail": error_matches[0]}
 
         warning_matches = [msg for msg in self._issue_texts("warning") if any(term in msg for term in warning_terms)]
         if warning_matches:
-            return {"status": "warning", "icon": "⚠️", "label": label, "detail": warning_matches[0]}
+            return {"section": section, "status": "warning", "icon": "⚠️", "label": label, "detail": warning_matches[0]}
 
-        return {"status": "ok", "icon": "✅", "label": label, "detail": success_detail}
+        return {"section": section, "status": "ok", "icon": "✅", "label": label, "detail": success_detail}
 
     def _build_checklist(self) -> List[Dict[str, str]]:
         effective_agent_type = self._effective_agent_type()
@@ -1090,31 +1090,31 @@ class AgentScriptValidator:
         employee_agent = effective_agent_type == "AgentforceEmployeeAgent"
 
         return [
-            self._checklist_entry("Indentation consistency", ["Mixed tabs and spaces"], success_detail="Tabs/spaces usage is consistent."),
-            self._checklist_entry("Boolean capitalization", ["Boolean must be capitalized"], success_detail="Boolean literals use True/False correctly."),
-            self._checklist_entry("Required top-level blocks", ["Missing required blocks"], success_detail="config, system, and start_agent blocks are present."),
-            self._checklist_entry("Config field completeness", ["Missing agent identifier", "Missing agent description", "Invalid agent_type"], ["Missing 'agent_type'."], success_detail="Agent identifier, description, and agent_type shape look valid."),
-            self._checklist_entry("Service vs Employee agent semantics", ["Service Agents require 'default_agent_user'", "Employee Agents must NOT include 'default_agent_user'", "Missing both 'agent_type' and 'default_agent_user'"], ["Missing 'agent_type'. This compiles when 'default_agent_user' is present"], success_detail="Agent type and default_agent_user relationship is valid."),
-            self._checklist_entry("Service Agent user exists in validation org", ["Service Agent default_agent_user"], ["Could not run org-aware default_agent_user validation", "Could not verify default_agent_user"], success_detail="default_agent_user resolves to an active Einstein Agent User.", na_detail="Not applicable to Employee Agents or agents without default_agent_user.", applicable=service_agent and bool(self.config_fields.get("default_agent_user"))),
-            self._checklist_entry("Required Service Agent permission assignments", ["AgentforceServiceAgentUser permission set/group assignment", "not assigned custom permission set"], ["not assigned custom permission set"], success_detail="Required system/custom permission assignments are present for the detected targets.", na_detail="No Service Agent target-backed actions require permission assignment checks.", applicable=service_agent and has_targets),
-            self._checklist_entry("Apex target permission coverage", ["Apex target '", "could not verify Apex target", "not assigned custom permission set"], ["could not verify Apex target", "not assigned custom permission set"], success_detail="All apex:// targets are covered by the assigned custom permission set.", na_detail="No apex:// targets detected.", applicable=service_agent and bool(targets["apex"])),
-            self._checklist_entry("Flow target readiness", ["Flow target '"] , ["Flow target '", "uses flow:// targets but user"], success_detail="All flow:// targets exist and have an active version.", na_detail="No flow:// targets detected.", applicable=bool(targets["flow"])),
-            self._checklist_entry("Other target protocol review", ["cannot permission-check automatically"], success_detail="All detected target protocols are fully supported by automatic checks.", na_detail="No non-apex/non-flow targets detected.", applicable=bool(targets["other"])),
-            self._checklist_entry("Exactly one start_agent", ["Missing start_agent block", "Exactly one start_agent is allowed"], success_detail="Exactly one start_agent block is defined."),
-            self._checklist_entry("Topic/start_agent naming collisions", ["Name collision risk"], success_detail="No topic/start_agent API-name collisions detected."),
-            self._checklist_entry("Naming rule compliance", ["Invalid developer_name", "Invalid agent_name", "Invalid topic name", "Invalid start_agent name", "Invalid variable name"], success_detail="Names follow Agent Script naming rules."),
-            self._checklist_entry("Invalid connections wrapper", ["Invalid top-level block 'connections:'"], success_detail="No invalid plural connections wrapper detected."),
-            self._checklist_entry("Variable safety", ["Variable cannot be both 'mutable' AND 'linked'", "Reference to undefined variable"], ["may conflict with platform context mappings"], success_detail="Variable declarations and executable references look consistent."),
-            self._checklist_entry("Topic references", ["Reference to undefined topic"], success_detail="All @topic references resolve to defined topics."),
-            self._checklist_entry("Description formatting", ["description appears multiline"], success_detail="Topic/start_agent descriptions stay on a single safe line."),
-            self._checklist_entry("Lifecycle hook formatting", ["should contain direct content, not an 'instructions:' wrapper"], success_detail="before_reasoning/after_reasoning blocks use direct content."),
-            self._checklist_entry("Collection / set gotchas", ["Empty list literal '[]'", "Resetting with 'set ... = []'"], ["Using @inputs in set"], success_detail="No known collection/set gotchas detected."),
-            self._checklist_entry("Action invocation syntax", ["Bare action name"], success_detail="run statements reference @actions explicitly."),
-            self._checklist_entry("Utility action metadata", ["is not valid on @utils.transition actions"], success_detail="@utils.transition metadata usage is valid."),
-            self._checklist_entry("Prompt output displayability", ["is_displayable: True"], success_detail="Prompt outputs avoid risky displayability settings.", na_detail="No prompt targets detected.", applicable=any((action.get("target") or "").startswith(("prompt://", "generatePromptResponse://")) for action in self.action_definitions)),
-            self._checklist_entry("Action I/O date typing", ["uses 'date' in action"], success_detail="No risky 'date' action I/O declarations detected."),
-            self._checklist_entry("Planner-required input hints", ["uses 'is_required: True'"], success_detail="Required inputs are either guarded or not using the risky planner-only hint."),
-            self._checklist_entry("Employee-agent-only / service-agent-only patterns", ["Employee Agents typically should not include 'connection messaging:'", "Messaging-linked variables are usually unnecessary for Employee Agents"], success_detail="No agent-type-specific Messaging configuration issues detected.", na_detail="Not applicable outside Employee Agent checks.", applicable=employee_agent),
+            self._checklist_entry("Structure", "Indentation consistency", ["Mixed tabs and spaces"], success_detail="Tabs/spaces usage is consistent."),
+            self._checklist_entry("Structure", "Boolean capitalization", ["Boolean must be capitalized"], success_detail="Boolean literals use True/False correctly."),
+            self._checklist_entry("Structure", "Required top-level blocks", ["Missing required blocks"], success_detail="config, system, and start_agent blocks are present."),
+            self._checklist_entry("Structure", "Exactly one start_agent", ["Missing start_agent block", "Exactly one start_agent is allowed"], success_detail="Exactly one start_agent block is defined."),
+            self._checklist_entry("Structure", "Topic/start_agent naming collisions", ["Name collision risk"], success_detail="No topic/start_agent API-name collisions detected."),
+            self._checklist_entry("Structure", "Naming rule compliance", ["Invalid developer_name", "Invalid agent_name", "Invalid topic name", "Invalid start_agent name", "Invalid variable name"], success_detail="Names follow Agent Script naming rules."),
+            self._checklist_entry("Structure", "Invalid connections wrapper", ["Invalid top-level block 'connections:'"], success_detail="No invalid plural connections wrapper detected."),
+            self._checklist_entry("Structure", "Variable safety", ["Variable cannot be both 'mutable' AND 'linked'", "Reference to undefined variable"], ["may conflict with platform context mappings"], success_detail="Variable declarations and executable references look consistent."),
+            self._checklist_entry("Structure", "Topic references", ["Reference to undefined topic"], success_detail="All @topic references resolve to defined topics."),
+            self._checklist_entry("Structure", "Description formatting", ["description appears multiline"], success_detail="Topic/start_agent descriptions stay on a single safe line."),
+            self._checklist_entry("Structure", "Lifecycle hook formatting", ["should contain direct content, not an 'instructions:' wrapper"], success_detail="before_reasoning/after_reasoning blocks use direct content."),
+            self._checklist_entry("Agent identity", "Config field completeness", ["Missing agent identifier", "Missing agent description", "Invalid agent_type"], ["Missing 'agent_type'."], success_detail="Agent identifier, description, and agent_type shape look valid."),
+            self._checklist_entry("Agent identity", "Service vs Employee agent semantics", ["Service Agents require 'default_agent_user'", "Employee Agents must NOT include 'default_agent_user'", "Missing both 'agent_type' and 'default_agent_user'"], ["Missing 'agent_type'. This compiles when 'default_agent_user' is present"], success_detail="Agent type and default_agent_user relationship is valid."),
+            self._checklist_entry("Agent identity", "Service Agent user exists in validation org", ["Service Agent default_agent_user"], ["Could not run org-aware default_agent_user validation", "Could not verify default_agent_user"], success_detail="default_agent_user resolves to an active Einstein Agent User.", na_detail="Not applicable to Employee Agents or agents without default_agent_user.", applicable=service_agent and bool(self.config_fields.get("default_agent_user"))),
+            self._checklist_entry("Targets & permissions", "Required Service Agent permission assignments", ["AgentforceServiceAgentUser permission set/group assignment", "not assigned custom permission set"], ["not assigned custom permission set"], success_detail="Required system/custom permission assignments are present for the detected targets.", na_detail="No Service Agent target-backed actions require permission assignment checks.", applicable=service_agent and has_targets),
+            self._checklist_entry("Targets & permissions", "Apex target permission coverage", ["Apex target '", "could not verify Apex target", "not assigned custom permission set"], ["could not verify Apex target", "not assigned custom permission set"], success_detail="All apex:// targets are covered by the assigned custom permission set.", na_detail="No apex:// targets detected.", applicable=service_agent and bool(targets["apex"])),
+            self._checklist_entry("Targets & permissions", "Flow target readiness", ["Flow target '"] , ["Flow target '", "uses flow:// targets but user"], success_detail="All flow:// targets exist and have an active version.", na_detail="No flow:// targets detected.", applicable=bool(targets["flow"])),
+            self._checklist_entry("Targets & permissions", "Other target protocol review", ["cannot permission-check automatically"], success_detail="All detected target protocols are fully supported by automatic checks.", na_detail="No non-apex/non-flow targets detected.", applicable=bool(targets["other"])),
+            self._checklist_entry("Runtime gotchas", "Collection / set gotchas", ["Empty list literal '[]'", "Resetting with 'set ... = []'"], ["Using @inputs in set"], success_detail="No known collection/set gotchas detected."),
+            self._checklist_entry("Runtime gotchas", "Action invocation syntax", ["Bare action name"], success_detail="run statements reference @actions explicitly."),
+            self._checklist_entry("Runtime gotchas", "Utility action metadata", ["is not valid on @utils.transition actions"], success_detail="@utils.transition metadata usage is valid."),
+            self._checklist_entry("Runtime gotchas", "Prompt output displayability", ["is_displayable: True"], success_detail="Prompt outputs avoid risky displayability settings.", na_detail="No prompt targets detected.", applicable=any((action.get("target") or "").startswith(("prompt://", "generatePromptResponse://")) for action in self.action_definitions)),
+            self._checklist_entry("Runtime gotchas", "Action I/O date typing", ["uses 'date' in action"], success_detail="No risky 'date' action I/O declarations detected."),
+            self._checklist_entry("Runtime gotchas", "Planner-required input hints", ["uses 'is_required: True'"], success_detail="Required inputs are either guarded or not using the risky planner-only hint."),
+            self._checklist_entry("Runtime gotchas", "Employee-agent-only / service-agent-only patterns", ["Employee Agents typically should not include 'connection messaging:'", "Messaging-linked variables are usually unnecessary for Employee Agents"], success_detail="No agent-type-specific Messaging configuration issues detected.", na_detail="Not applicable outside Employee Agent checks.", applicable=employee_agent),
         ]
 
 
@@ -1132,11 +1132,27 @@ def format_output(result: dict) -> str:
     if result["warnings"] and result["success"]:
         lines.append(f"⚠️ {len(result['warnings'])} warning(s) need review")
 
+    if result["errors"]:
+        recommendation = "Fix blocking issues before preview/publish."
+    elif result["warnings"]:
+        recommendation = "Safe to preview. Review warnings before publish."
+    else:
+        recommendation = "Safe to preview and publish."
+
+    lines.append(f"➡️ Recommended next step: {recommendation}")
     lines.append("")
     lines.append("Validation checklist")
     lines.append("--------------------")
+
+    current_section = None
     for item in checklist:
-        lines.append(f"{item['icon']} {item['label']} — {item['detail']}")
+        section = item.get("section", "General")
+        if section != current_section:
+            if current_section is not None:
+                lines.append("")
+            lines.append(f"{section}:")
+            current_section = section
+        lines.append(f"  {item['icon']} {item['label']} — {item['detail']}")
 
     if result["errors"]:
         lines.append("")
