@@ -8,6 +8,7 @@ Tools for installing sf-skills into Claude Code.
 |------|---------|
 | `install.py` | Unified Python installer — downloads skills, hooks, LSP engine, and agents from GitHub |
 | `install.sh` | Bash wrapper — checks prerequisites (Python, Homebrew, SF CLI, Java, Node) then runs `install.py` |
+| `check_repo_hygiene.py` | Verifies tracked Markdown files for broken local links, placeholder text, and stale install/path references |
 
 ## Quick Start
 
@@ -32,6 +33,14 @@ git clone https://github.com/Jaganpro/sf-skills
 cd sf-skills
 python3 tools/install.py
 ```
+
+### Repository hygiene check
+
+```bash
+python3 tools/check_repo_hygiene.py
+```
+
+> By default this excludes `docs/` so generated/whitepaper content can be managed separately. Use `--include-docs` when you want a full-repo Markdown hygiene scan.
 
 ## install.py — CLI Reference
 

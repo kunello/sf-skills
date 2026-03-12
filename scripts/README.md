@@ -349,6 +349,19 @@ System.debug(res.getBody());
 
 ---
 
+## 🧹 Local Cleanup Helper
+
+To remove common local/generated artifacts from your working tree:
+
+```bash
+./scripts/cleanup-local.sh          # Preview removals
+./scripts/cleanup-local.sh --apply  # Delete matched local artifacts
+```
+
+This only targets local caches, virtual environments, trace output, and other generated workspace files. It does **not** modify tracked repository content.
+
+---
+
 ## 📖 Additional Resources
 
 - [Salesforce External Credentials Documentation](https://help.salesforce.com/s/articleView?id=sf.nc_create_edit_external_credential.htm)
