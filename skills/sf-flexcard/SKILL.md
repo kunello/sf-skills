@@ -60,6 +60,7 @@ FlexCards consume data from Integration Procedures and can launch OmniScripts. B
 | **Data source binding** | Data sources bind to Integration Procedures for live data; the IP must be active and deployed before the FlexCard can retrieve data |
 | **Child card embedding** | FlexCards can embed other FlexCards as child cards, enabling composite layouts with shared or independent data sources |
 | **OmniScript launching** | FlexCards can launch OmniScripts via action buttons, passing context data from the card's data source into the OmniScript's input |
+| **Designer virtual object** | The FlexCard Designer uses `OmniFlexCardView` as a virtual list object (`/lightning/o/OmniFlexCardView/home`), separate from the `OmniUiCard` sObject where card records are stored. Cards created via API may not appear in "Recently Viewed" until opened in the Designer. |
 
 ---
 

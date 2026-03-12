@@ -13,7 +13,7 @@ The most common FlexCard data source is an Integration Procedure. The data sourc
 ```json
 {
   "dataSource": {
-    "type": "IntegrationProcedure",
+    "type": "IntegrationProcedures",
     "value": {
       "ipMethod": "Type_SubType",
       "inputMap": {
@@ -27,7 +27,7 @@ The most common FlexCard data source is an Integration Procedure. The data sourc
 
 | Property | Purpose | Example |
 |----------|---------|---------|
-| `type` | Data source type identifier | `"IntegrationProcedure"` |
+| `type` | Data source type identifier | `"IntegrationProcedures"` (plural, capital P) |
 | `ipMethod` | IP Type and SubType joined by underscore | `"Account_GetSummary"` |
 | `inputMap` | Key-value pairs sent as IP input | `{ "recordId": "{recordId}" }` |
 | `resultListPath` | JSON path to the array node for list-type cards | `"records"` or `""` for root |
