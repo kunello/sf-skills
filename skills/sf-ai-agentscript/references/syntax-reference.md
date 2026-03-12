@@ -93,6 +93,8 @@ config:
 
 > ⚠️ **Critical**: `default_agent_user` must exist in the org with the "Einstein Agent User" profile. Query: `SELECT Username FROM User WHERE Profile.Name = 'Einstein Agent User' AND IsActive = true`
 
+> 💡 **Compatibility note**: Public/community examples may still use legacy config `description:`. That legacy field still appears in current TrailheadApps recipes, but prefer `agent_description:` for new authoring and skill examples. Treat `description:` as compatibility syntax, not the preferred canonical form.
+
 ---
 
 ### 3. variables: Block (Optional)
@@ -476,7 +478,7 @@ topic main:
 **Key Rules:**
 - Content goes **directly** under the block (NO `instructions:` wrapper)
 - Reliable primitives: `set`, `if`/`else`, `transition to`
-- `run` behavior: `run @actions.X` works in `before_reasoning:` for topic-level actions with `target:` — validated with `set @variables.X = @outputs.Y` to capture outputs. However, behavior is inconsistent across bundle types for other action kinds. Safest to use `run` in `reasoning.actions:` or `instructions: ->` for general cases.
+- `run` behavior: lifecycle-hook syntax is valid, but `run @actions.X` inside `before_reasoning:` / `after_reasoning:` is not portable enough to treat as universally reliable. It has worked in some target-backed cases, but behavior is inconsistent across bundle types and org states. Safest guidance: keep lifecycle hooks focused on `set`, `if`/`else`, and `transition to`, and use `run` primarily in `reasoning.actions:` post-action chains or `instructions: ->` blocks.
 - `transition to` works in `after_reasoning:` blocks
 - If a topic transitions mid-execution, the original topic's `after_reasoning:` does NOT run
 - Both hooks are FREE (no credit cost) — use for data prep, logging, cleanup

@@ -466,6 +466,7 @@ sf data query -q "SELECT Username FROM User WHERE Profile.Name = 'Einstein Agent
 | Scoring rubric | [references/scoring-rubric.md](references/scoring-rubric.md) | 100-point scoring system details |
 | Architecture patterns | [references/architecture-patterns.md](references/architecture-patterns.md) | Hub-and-spoke, verification gate, post-action loop |
 | Sources | [references/sources.md](references/sources.md) | Source attributions & acknowledgments |
+| Upstream recipes audit | [references/upstream-recipes-audit.md](references/upstream-recipes-audit.md) | TrailheadApps alignment gaps, stale examples, adoption policy |
 | Version history | [references/version-history.md](references/version-history.md) | Changelog from v1.0.0 to current |
 
 ### Tier 2: Resource Guides (Comprehensive)
