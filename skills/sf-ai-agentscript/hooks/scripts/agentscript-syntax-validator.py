@@ -12,7 +12,7 @@ Checks include:
 - Missing required blocks
 - Missing/invalid config fields
 - Service vs Employee agent rules for default_agent_user
-- Org-aware Service Agent user verification against the configured validation org
+- Org-aware Service Agent user verification against the resolved target org
 - Exactly one start_agent
 - Duplicate or colliding topic/start_agent names
 - Naming rule violations
@@ -155,20 +155,41 @@ class AgentScriptValidator:
             return value[1:-1]
         return value
 
-    @staticmethod
-    def _parse_validation_org_from_skill(skill_path: Path) -> Optional[str]:
+    def _project_root_for_file(self) -> Path:
+        current = Path(self.file_path).resolve().parent
+        for candidate in [current, *current.parents]:
+            if (candidate / "sfdx-project.json").exists():
+                return candidate
+        return current
+
+    def _resolve_sf_target_org(self, cwd: Path) -> Optional[str]:
         try:
-            content = skill_path.read_text()
+            proc = subprocess.run(
+                ["sf", "config", "get", "target-org", "--json"],
+                text=True,
+                capture_output=True,
+                timeout=15,
+                cwd=str(cwd),
+            )
         except Exception:
             return None
 
-        frontmatter_match = re.match(r"^---\n(.*?)\n---", content, re.DOTALL)
-        if not frontmatter_match:
+        if proc.returncode != 0:
             return None
 
-        metadata_match = re.search(r'^\s*validation_org:\s*"?([^"\n]+)"?\s*$', frontmatter_match.group(1), re.MULTILINE)
-        if metadata_match:
-            return metadata_match.group(1).strip()
+        try:
+            payload = json.loads(proc.stdout or "{}")
+        except Exception:
+            return None
+
+        results = payload.get("result") or []
+        if not isinstance(results, list):
+            return None
+
+        for entry in results:
+            value = (entry or {}).get("value")
+            if value:
+                return str(value).strip()
         return None
 
     def _resolve_validation_org(self) -> Optional[str]:
@@ -177,8 +198,7 @@ class AgentScriptValidator:
             if value:
                 return value.strip()
 
-        skill_path = Path(__file__).resolve().parents[2] / "SKILL.md"
-        return self._parse_validation_org_from_skill(skill_path)
+        return self._resolve_sf_target_org(self._project_root_for_file())
 
     def _effective_agent_type(self) -> Optional[str]:
         agent_type = self.config_fields.get("agent_type")
@@ -915,7 +935,7 @@ class AgentScriptValidator:
         if not self.validation_org:
             self._add_warning(
                 line,
-                "Could not run org-aware default_agent_user validation because no validation org is configured. Set AGENTSCRIPT_VALIDATION_ORG (or validation_org in SKILL.md) to enforce Service Agent user checks.",
+                "Could not run org-aware default_agent_user validation because no target org could be resolved. Set AGENTSCRIPT_VALIDATION_ORG explicitly or configure sf target-org for this project.",
             )
             return
 
@@ -1103,7 +1123,7 @@ class AgentScriptValidator:
             self._checklist_entry("Structure", "Lifecycle hook formatting", ["should contain direct content, not an 'instructions:' wrapper"], success_detail="before_reasoning/after_reasoning blocks use direct content."),
             self._checklist_entry("Agent identity", "Config field completeness", ["Missing agent identifier", "Missing agent description", "Invalid agent_type"], ["Missing 'agent_type'."], success_detail="Agent identifier, description, and agent_type shape look valid.", confidence="Compiler rule"),
             self._checklist_entry("Agent identity", "Service vs Employee agent semantics", ["Service Agents require 'default_agent_user'", "Employee Agents must NOT include 'default_agent_user'", "Missing both 'agent_type' and 'default_agent_user'"], ["Missing 'agent_type'. This compiles when 'default_agent_user' is present"], success_detail="Agent type and default_agent_user relationship is valid.", confidence="Compiler / platform rule"),
-            self._checklist_entry("Agent identity", "Service Agent user exists in validation org", ["Service Agent default_agent_user"], ["Could not run org-aware default_agent_user validation", "Could not verify default_agent_user", "was not found in org"], success_detail="default_agent_user resolves to an active Einstein Agent User.", na_detail="Not applicable to Employee Agents or agents without default_agent_user.", applicable=service_agent and bool(self.config_fields.get("default_agent_user")), confidence="Configuration drift / publish risk"),
+            self._checklist_entry("Agent identity", "Service Agent user exists in target org", ["Service Agent default_agent_user"], ["Could not run org-aware default_agent_user validation", "Could not verify default_agent_user", "was not found in org"], success_detail="default_agent_user resolves to an active Einstein Agent User.", na_detail="Not applicable to Employee Agents or agents without default_agent_user.", applicable=service_agent and bool(self.config_fields.get("default_agent_user")), confidence="Configuration drift / publish risk"),
             self._checklist_entry("Targets & permissions", "Required Service Agent permission assignments", ["AgentforceServiceAgentUser permission set/group assignment", "not assigned custom permission set"], ["not assigned custom permission set"], success_detail="Required system/custom permission assignments are present for the detected targets.", na_detail="No Service Agent target-backed actions require permission assignment checks.", applicable=service_agent and has_targets, confidence="Likely runtime risk"),
             self._checklist_entry("Targets & permissions", "Apex target permission coverage", ["Apex target '", "could not verify Apex target", "not assigned custom permission set"], ["could not verify Apex target", "not assigned custom permission set"], success_detail="All apex:// targets are covered by the assigned custom permission set.", na_detail="No apex:// targets detected.", applicable=service_agent and bool(targets["apex"]), confidence="Likely runtime risk"),
             self._checklist_entry("Targets & permissions", "Flow target readiness", ["Flow target '"] , ["Flow target '", "uses flow:// targets but user"], success_detail="All flow:// targets exist and have an active version.", na_detail="No flow:// targets detected.", applicable=bool(targets["flow"]), confidence="Proven publish blocker"),

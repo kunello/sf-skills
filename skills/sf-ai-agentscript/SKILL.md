@@ -20,7 +20,6 @@ metadata:
   validation_status: "PASS"
   validation_agents: 24
   validate_by: "2026-04-10"  # 30 days from last validation
-  validation_org: "AgentforceTesting"
 ---
 
 # SF-AI-AgentScript Skill
@@ -247,7 +246,7 @@ Level 2: ACTION INVOCATION (in `reasoning.actions:` block)
 
 ### Phase 3: Validation (LSP + CLI)
 
-> **AUTOMATIC**: validation runs on every Write/Edit to `.agent` files — catches mixed tabs/spaces, invalid Service-vs-Employee `default_agent_user` usage, invalid `@utils.transition` metadata, empty-list expression gotchas, bare `run` calls, common variable/reference errors, and now **org-aware Service Agent checks** against the configured validation org: valid Einstein Agent User, required `AgentforceServiceAgentUser` assignment, expected `{AgentName}_Access` assignment for target-backed actions, Apex `<classAccesses>` coverage, and Flow target existence/activation. Fix errors, re-save, repeat until clean.
+> **AUTOMATIC**: validation runs on every Write/Edit to `.agent` files — catches mixed tabs/spaces, invalid Service-vs-Employee `default_agent_user` usage, invalid `@utils.transition` metadata, empty-list expression gotchas, bare `run` calls, common variable/reference errors, and now **org-aware Service Agent checks** against the active project org: valid Einstein Agent User, required `AgentforceServiceAgentUser` assignment, expected `{AgentName}_Access` assignment for target-backed actions, Apex `<classAccesses>` coverage, and Flow target existence/activation. Fix errors, re-save, repeat until clean.
 
 ```bash
 # CLI Validation (before deploy):
@@ -268,7 +267,7 @@ For Service Agents, confirm all four before publish:
 - `UserType != AutomatedProcess`
 - `Profile.Name = 'Einstein Agent User'`
 
-The write/edit validator now enforces this automatically against the configured validation org (`metadata.validation_org` in this skill, or `AGENTSCRIPT_VALIDATION_ORG` / `SF_TARGET_ORG` env override). Employee Agents are exempt and instead must omit `default_agent_user` entirely.
+The write/edit validator now enforces this automatically against the resolved target org for the current project. Resolution order is: `AGENTSCRIPT_VALIDATION_ORG` override, then `SF_TARGET_ORG` / `TARGET_ORG`, then `sf config get target-org` from the project containing the `.agent` file. Employee Agents are exempt and instead must omit `default_agent_user` entirely.
 
 Validator output is now grouped into human-readable sections:
 - **Structure**
@@ -288,7 +287,7 @@ For Service Agents with targets, the validator also checks:
 - `AgentforceServiceAgentUser` permission set/group assignment on the agent user
 - custom `{AgentName}_Access` assignment when target-backed actions are present
 - `apex://` targets are covered by `<classAccesses>` in that custom permission set
-- `flow://` targets exist and have an active version in the validation org
+- `flow://` targets exist and have an active version in the resolved target org
 
 **Native pre-publish checklist:**
 1. `sf agent validate authoring-bundle --api-name MyAgent -o TARGET_ORG --json`
