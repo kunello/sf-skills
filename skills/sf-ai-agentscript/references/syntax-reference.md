@@ -175,13 +175,17 @@ language:
 ```yaml
 knowledge:
   knowledge_base: "My_Knowledge_Base"
+  citations_enabled: False
 ```
 
-| Field | Purpose |
-|-------|---------|
-| `knowledge_base` | Name of the knowledge base to attach to the agent |
+| Field | Required | Purpose |
+|-------|----------|---------|
+| `knowledge_base` | ✅ Yes (if block present) | Name of the knowledge base to attach to the agent |
+| `citations_enabled` | Optional | `True`/`False` — controls whether knowledge citations are included in responses (default: `True` if omitted). Set to `False` if citations are not needed or if using NGA agents where citations do not render (Issue 32). |
 
 > 💡 Knowledge bases are configured in the Salesforce org and referenced by name. The knowledge block enables RAG (Retrieval Augmented Generation) capabilities for the agent.
+
+> ⚠️ **Required even without Data Library**: If your agent references knowledge in any topic but you don't have a Data Library configured, you still need a `knowledge:` block with `citations_enabled: False` to prevent compilation errors.
 
 ---
 
@@ -380,18 +384,20 @@ Action definitions with `target:` support the following metadata properties. The
 | `label` | String | Display name |
 | `description` | String | LLM context |
 | `complex_data_type_name` | String | Lightning type mapping |
+| `lightning:isPII` | Boolean | Marks field as PII for platform data handling and masking |
 
 **Output-Level:**
 
 | Property | Type | Notes |
 |----------|------|-------|
 | `filter_from_agent` | Boolean | `True` = hide from user display (GA standard name) |
-| `is_displayable` | Boolean | `False` = hide from user (compile-valid alias for `filter_from_agent`) |
+| `is_displayable` | Boolean | `False` = hide from user (compile-valid alias for `filter_from_agent`). ⚠️ Setting `True` on prompt template outputs causes blank response (Issue 34) |
 | `is_used_by_planner` | Boolean | `True` = LLM can reason about value |
 | `developer_name` | String | Overrides the parameter's developer name |
 | `label` | String | Display name |
 | `description` | String | LLM context |
 | `complex_data_type_name` | String | Lightning type mapping |
+| `lightning:isPII` | Boolean | Marks field as PII for platform data handling and masking |
 
 ---
 
@@ -530,7 +536,7 @@ topic main:
 | `@topic.x` | Reference a topic | `@topic.escalation` |
 | `@outputs.x` | Reference action output | `@outputs.status` |
 | `@session.x` | Reference session data | `@session.sessionID` |
-| `@context.x` | Reference context data | `@context.userProfile` |
+| `@context.x` | Reference context data (**Employee Agents on LEX only** — NOT available for Service Agents; see Issue 39) | `@context.userProfile` |
 | `@inputs.x` | Reference procedure input | `@inputs.account_number` ⚠️ Procedure context only — see Common Pitfalls |
 | `@system_variables.user_input` | Most recent user utterance | `@system_variables.user_input` |
 | `@knowledge.citations_url` | Knowledge citation URL config | `@knowledge.citations_url` |
@@ -546,9 +552,11 @@ Linked variables commonly reference these external source patterns:
 | Source Pattern | Description | Example |
 |----------------|-------------|---------|
 | `@session.sessionID` | Current session identifier | Standard session context |
-| `@context.customerId` | Customer ID from context | Pre-authenticated context |
-| `@MessagingSession.{field}` | Messaging session fields | `@MessagingSession.MessagingEndUserId` |
-| `@MessagingEndUser.{field}` | Messaging end user fields | `@MessagingEndUser.Name`, `@MessagingEndUser.ContactId` |
+| `@context.customerId` | Customer ID from context | **Employee Agents on LEX pages only** — NOT available for Service Agents (Issue 39) |
+| `@MessagingSession.{field}` | Messaging session fields (Service Agents) | `@MessagingSession.MessagingEndUserId` |
+| `@MessagingEndUser.{field}` | Messaging end user fields (Service Agents) | `@MessagingEndUser.Name`, `@MessagingEndUser.ContactId` |
+
+> ⚠️ **Agent Type Determines Source Availability**: `@context.*` sources resolve LEX page-level context — they only work for **Employee Agents** embedded on Lightning record pages. **Service Agents** (NGA / ExternalCopilot) must use `@MessagingSession.*` or `@MessagingEndUser.*` for channel context. Using `@context.*` in a Service Agent compiles but produces "Unsupported data type" at runtime. See [known-issues.md](known-issues.md#issue-39) Issue 39.
 
 ```yaml
 # Common Messaging channel linked variables
@@ -766,6 +774,7 @@ Agent Script expressions use a sandboxed subset of Python. Not all Python operat
 | Lambda expressions | Use Flow/Apex action |
 | `for`/`while` loops | Use topic loop pattern (re-entry) |
 | `import` statements | Not available (security sandbox) |
+| Empty list literal in expressions (`== []`, `= []`) | Use `len(@variables.list) == 0` for empty check; use temp empty var for reset (Issue 33) |
 
 ### Apex Complex Type Notation
 
@@ -813,6 +822,10 @@ actions:
 | Null check vs empty string | Wrong comparison for null | Use `is None` for null checks, `== ""` for empty strings — they are different |
 | `is_required` not enforced | Planner invokes action without required inputs | Use `available when @variables.X is not None` guard instead. `is_required` is a hint, not a gate. See Issue 26 |
 | `date` type in action I/O | Runtime error `'Date'` | Use `object` + `complex_data_type_name: "lightning__dateType"` in action I/O. `date` works fine for variables. See Issue 28 |
+| `== []` or `set = []` in expressions | Parse error (`[` not allowed) | Use `len(@variables.list) == 0` for empty check; use temp empty var for reset. See Issue 33 |
+| `is_displayable: True` on prompt outputs | Agent returns blank/empty response | Set `is_displayable: False` and let the reasoner synthesize the output. See Issue 34 |
+| Line breaks in topic `description:` | Script breaks with syntax error | Keep `description:` on a single line — no line breaks. See Issue 35 |
+| Variable name matches system context | "Field is already mapped to a Context Variable" | Avoid names like `Locale`, `Channel`, `Status`, `Origin` — use prefixed names like `customer_locale`. See Issue 36 |
 
 ### `@inputs` in `set` — Deploy-Breaking Anti-Pattern
 

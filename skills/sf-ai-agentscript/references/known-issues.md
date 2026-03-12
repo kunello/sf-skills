@@ -527,6 +527,154 @@
 
 ---
 
+### Issue 33: `== []` and `set ... = []` — empty list literal not supported in expressions
+- **Status**: WORKAROUND
+- **Date Discovered**: 2026-03-12
+- **Affects**: Expressions using `[]` literal for empty list comparison or assignment
+- **Symptom**: Two related parse errors:
+  1. `if @variables.my_list == []:` → parse error (`[` not allowed in expression position)
+  2. `set @variables.my_list = []` → parse error (`[` not allowed in assignment position)
+- **Root Cause**: The expression parser's sandboxed Python AST subset does not include list literal construction. `[]` is valid in `mutable list[T] = []` declarations (handled by the declaration parser), but NOT in runtime expressions.
+- **Workaround**:
+  - Empty check: `if @variables.my_list is None or len(@variables.my_list) == 0:`
+  - Reset to empty: Use a dedicated empty list variable and copy:
+    ```yaml
+    variables:
+       empty_temp: mutable list[string] = []
+       my_list: mutable list[string] = []
+
+    # To reset my_list at runtime:
+    set @variables.my_list = @variables.empty_temp
+    ```
+- **Open Questions**: Will `[]` be added to the expression parser?
+- **Cross-reference**: See syntax-reference.md § Expression Limitations.
+
+---
+
+### Issue 34: `is_displayable: True` on prompt template outputs causes blank response
+- **Status**: WORKAROUND
+- **Date Discovered**: 2026-03-12
+- **Affects**: Action outputs on prompt template actions (`prompt://` / `generatePromptResponse://` targets)
+- **Symptom**: Setting `is_displayable: True` (or toggling "Show in conversation" in the UI) on a prompt template action's output causes the agent to return a blank or empty response. The prompt template executes correctly (visible in trace), but the response text is not surfaced to the user.
+- **Root Cause**: When `is_displayable: True`, the platform attempts to render the raw prompt template output directly instead of letting the reasoner synthesize it. The rendering pipeline does not handle prompt template output format correctly, resulting in blank display.
+- **Workaround**: Set `is_displayable: False` (or `filter_from_agent: True`) on prompt template outputs and let the reasoner synthesize the output into its response naturally.
+  ```yaml
+  # ❌ WRONG — causes blank response
+  outputs:
+     response_text: string
+        is_displayable: True
+
+  # ✅ CORRECT — reasoner synthesizes output
+  outputs:
+     response_text: string
+        is_displayable: False
+        is_used_by_planner: True
+  ```
+- **Open Questions**: Will the rendering pipeline be updated to handle prompt template output with `is_displayable: True`?
+- **Cross-reference**: See production-gotchas.md § `is_displayable: True` on Prompt Outputs.
+
+---
+
+### Issue 35: Topic `description:` with line breaks breaks the script
+- **Status**: WORKAROUND
+- **Date Discovered**: 2026-03-12
+- **Affects**: `topic` and `start_agent` blocks with multi-line `description:` values
+- **Symptom**: Including line breaks (literal newlines) inside a topic's `description: "..."` string causes the script to fail during parsing. The error is non-specific and may manifest as a syntax error on the following line.
+- **Root Cause**: The topic `description:` parser expects a single-line string value. Unlike `instructions:` which supports `|` and `->` multiline syntax, `description:` does not have a multiline variant.
+- **Workaround**: Keep topic descriptions on a single line. Remove all line breaks.
+  ```yaml
+  # ❌ WRONG — line break in description
+  topic support:
+     description: "Handles customer support requests
+        including billing and technical issues"
+
+  # ✅ CORRECT — single line
+  topic support:
+     description: "Handles customer support requests including billing and technical issues"
+  ```
+- **Open Questions**: Will `description:` gain multiline support (e.g., `description: |`)?
+
+---
+
+### Issue 36: Variable names conflict with system context variable mappings
+- **Status**: WORKAROUND
+- **Date Discovered**: 2026-03-12
+- **Affects**: Variable declarations using names that match platform context variable field names
+- **Symptom**: Declaring a variable with a name like `Locale` that matches an existing system context variable field name produces the error: "The field is already mapped to a Context Variable." The agent fails to compile.
+- **Root Cause**: The platform reserves certain variable names for internal context variable mappings (e.g., `MessagingSession` fields like `Locale`, `Channel`, `Status`). These names collide with user-declared variables at the namespace level.
+- **Workaround**: Use unique, prefixed names that avoid common MessagingSession and system field names:
+  ```yaml
+  # ❌ WRONG — collides with system context mapping
+  variables:
+     Locale: mutable string = ""
+
+  # ✅ CORRECT — unique prefixed name
+  variables:
+     customer_locale: mutable string = ""
+  ```
+  **Known reserved names** (partial list): `Locale`, `Channel`, `Status`, `Origin`
+- **Open Questions**: Will Salesforce publish a complete list of reserved context variable names?
+
+---
+
+### Issue 37: Draft version works but Committed version fails
+- **Status**: OPEN
+- **Date Discovered**: 2026-03-12
+- **Affects**: Agent behavior difference between Draft and Committed/Active versions
+- **Symptom**: Actions, variable updates, and topic routing that work correctly in Draft mode (preview) fail silently or produce different behavior in the Committed/Active version. The agent may skip actions, fail to update variables, or route incorrectly.
+- **Root Cause**: Multiple potential causes reported: graph serialization differences between Draft and Committed compilation, action registry timing (Draft resolves actions lazily, Committed resolves eagerly), and stale cache from previous versions.
+- **Workaround**: No universal workaround. Mitigation strategies:
+  1. Re-commit (deactivate → re-publish → re-activate) to force a clean compilation
+  2. Verify all action targets exist and are active in the org
+  3. Compare Draft and Committed trace outputs to identify specific divergence points
+- **Open Questions**: Will the Draft and Committed compilation paths be unified?
+
+---
+
+### Issue 38: Object variables not editable in preview
+- **Status**: OPEN
+- **Date Discovered**: 2026-03-12
+- **Affects**: `sf agent preview` and Agent Builder Preview
+- **Symptom**: Only scalar variable types (`string`, `number`, `boolean`) can be overridden in the preview interface. Object and list variables cannot be edited or injected — the UI does not provide input fields for complex types.
+- **Root Cause**: The preview interface only renders scalar input controls. No JSON editor or structured input is provided for `object` or `list[T]` types.
+- **Workaround**: For values needed during testing:
+  1. Use scalar variables that can be set in preview, then assemble in logic
+  2. Test object/list variable scenarios via the Agent Runtime API (Connect API) which accepts JSON payloads
+  3. Pre-populate object variables in `before_reasoning:` for testing
+- **Open Questions**: Will the preview interface add JSON editing for object/list variables?
+
+---
+
+### Issue 39: `@context.*` linked sources not supported for NGA Service Agents
+- **Status**: WORKAROUND
+- **Date Discovered**: 2026-03-12
+- **Affects**: Linked variables using `@context.*` sources in NGA Service Agents (ExternalCopilot / EinsteinServiceAgent)
+- **Symptom**: Linked variables with `source: @context.currentRecordId`, `source: @context.customerId`, or other `@context.*` references produce "Unsupported data type" errors at runtime in NGA Service Agents. The variables compile and publish without error but fail when the agent starts a conversation.
+- **Root Cause**: `@context.*` references resolve **page-level context** from Lightning Experience (LEX). This context is only available to **Employee Agents** embedded on LEX record pages where a `recordId` and user context are present. NGA Service Agents (chat, messaging) do not have LEX page context — they receive channel context via `@MessagingSession.*` instead.
+- **Workaround**: For Service Agents, use `@MessagingSession.*` for channel context:
+  ```yaml
+  # ❌ WRONG for Service Agents — @context not available
+  variables:
+     customer_id: linked string
+        source: @context.customerId
+
+  # ✅ CORRECT for Service Agents — use messaging channel context
+  variables:
+     end_user_id: linked string
+        source: @MessagingSession.MessagingEndUserId
+     session_key: linked string
+        source: @MessagingSession.MessagingSessionKey
+
+  # ✅ CORRECT for Employee Agents on LEX — @context IS available
+  variables:
+     record_id: linked string
+        source: @context.currentRecordId
+  ```
+- **Open Questions**: Will `@context.*` be extended to Service Agent channels?
+- **Cross-reference**: See syntax-reference.md § Resource References, Common Linked Variable Sources.
+
+---
+
 ## Resolved Issues
 
 ### Issue 16: `connections:` (plural) wrapper block not valid — use `connection messaging:` (singular)
@@ -562,4 +710,4 @@ When an issue is resolved:
 
 ---
 
-*Last updated: 2026-03-11 (v2.6.0)*
+*Last updated: 2026-03-12 (v2.7.0)*

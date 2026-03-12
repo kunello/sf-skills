@@ -123,6 +123,35 @@ topic intent_router:
             transition to @topic.orders
 ```
 
+## `is_displayable: True` on Prompt Template Outputs
+
+> **Production impact**: Agent returns blank/empty responses when prompt template action outputs have `is_displayable: True` set.
+
+**The Problem**: Setting `is_displayable: True` (or toggling "Show in conversation" in the UI) on a prompt template action's output causes the platform to attempt direct rendering of the raw output. The rendering pipeline does not handle prompt template output format correctly, resulting in a blank response to the user — even though the trace shows the prompt template executed successfully.
+
+```yaml
+# ❌ WRONG — causes blank response for prompt template actions
+outputs:
+   response_text: string
+      is_displayable: True     # Platform tries to render raw output → blank
+
+# ✅ CORRECT — let the reasoner synthesize the output
+outputs:
+   response_text: string
+      is_displayable: False    # Hide raw output from direct display
+      is_used_by_planner: True # LLM reads and synthesizes into response
+```
+
+**Key Points:**
+- This only affects prompt template actions (`prompt://` / `generatePromptResponse://` targets)
+- `is_displayable: True` works correctly on non-prompt actions (Flow, Apex) where the output is a simple string
+- `filter_from_agent: True` is the GA standard equivalent of `is_displayable: False`
+- The reasoner naturally incorporates planner-visible outputs into its response — explicit display is unnecessary
+
+> **Cross-reference**: See [known-issues.md](known-issues.md#issue-34) Issue 34.
+
+---
+
 ## Action I/O Metadata Properties
 
 > **Complete reference** for all metadata properties available on action definitions, inputs, and outputs.
