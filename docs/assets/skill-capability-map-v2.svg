@@ -1,9 +1,9 @@
-<svg width="1600" height="1490" viewBox="0 0 1600 1490" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+<svg width="1600" height="1550" viewBox="0 0 1600 1550" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
   <title id="title">SF Skills Capability Map</title>
   <desc id="desc">A capability map of the Salesforce skills ecosystem with AI and Automation at the top, Development and Integration in the middle, Quality in the delivery band, separate DevOps and Diagrams sections, and Foundation at the base.</desc>
 
   <defs>
-    <linearGradient id="bg" x1="120" y1="40" x2="1480" y2="1450" gradientUnits="userSpaceOnUse">
+    <linearGradient id="bg" x1="120" y1="40" x2="1480" y2="1510" gradientUnits="userSpaceOnUse">
       <stop stop-color="#FAFBFF"/>
       <stop offset="1" stop-color="#FFFDF8"/>
     </linearGradient>
@@ -43,7 +43,7 @@
     </filter>
   </defs>
 
-  <rect x="24" y="24" width="1552" height="1442" rx="28" fill="url(#bg)" stroke="#E2E8F0"/>
+  <rect x="24" y="24" width="1552" height="1502" rx="28" fill="url(#bg)" stroke="#E2E8F0"/>
   <rect x="64" y="64" width="1472" height="100" rx="26" fill="#FFFFFF" stroke="#E2E8F0" filter="url(#shadow)"/>
 
   <text x="92" y="104" fill="#0F172A" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="700">SF Skills Ecosystem</text>
@@ -64,28 +64,28 @@
 
   <!-- AI -->
   <g transform="translate(60 190)">
-    <rect x="0" y="0" width="1480" height="178" rx="24" fill="url(#laneAI)" stroke="#F9A8D4"/>
+    <rect x="0" y="0" width="1480" height="236" rx="24" fill="url(#laneAI)" stroke="#F9A8D4"/>
     <text x="28" y="38" fill="#BE185D" font-family="Avenir Next, Segoe UI, Arial, sans-serif" font-size="15" font-weight="700" letter-spacing="1.8">AI &amp; AUTOMATION</text>
     <text x="28" y="68" fill="#334155" font-family="Segoe UI, Arial, sans-serif" font-size="17">Top-level agent capabilities for Agentforce design, Agent Script, testing, observability, and persona work.</text>
     <g filter="url(#softShadow)">
-      <rect x="110" y="92" width="252" height="58" rx="19" fill="#FFFFFF" stroke="#EC4899"/>
-      <text x="236" y="128" text-anchor="middle" fill="#0F172A" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700">sf-ai-agentscript</text>
-      <rect x="390" y="92" width="270" height="58" rx="19" fill="#FFFFFF" stroke="#EC4899"/>
-      <text x="525" y="116" text-anchor="middle" fill="#0F172A" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700">sf-ai-agentforce-</text>
-      <text x="525" y="136" text-anchor="middle" fill="#0F172A" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700">persona</text>
-      <rect x="790" y="92" width="290" height="58" rx="19" fill="#FFFFFF" stroke="#EC4899"/>
-      <text x="935" y="116" text-anchor="middle" fill="#0F172A" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700">sf-ai-agentforce-</text>
-      <text x="935" y="136" text-anchor="middle" fill="#0F172A" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700">testing</text>
-      <rect x="1110" y="92" width="300" height="58" rx="19" fill="#FFFFFF" stroke="#EC4899"/>
-      <text x="1260" y="116" text-anchor="middle" fill="#0F172A" font-family="Segoe UI, Arial, sans-serif" font-size="17" font-weight="700">sf-ai-agentforce-</text>
-      <text x="1260" y="136" text-anchor="middle" fill="#0F172A" font-family="Segoe UI, Arial, sans-serif" font-size="17" font-weight="700">observability</text>
-      <rect x="560" y="92" width="250" height="58" rx="19" fill="#FFFFFF" stroke="#DB2777" stroke-width="2"/>
-      <text x="685" y="128" text-anchor="middle" fill="#831843" font-family="Segoe UI, Arial, sans-serif" font-size="22" font-weight="800">sf-ai-agentforce</text>
+      <rect x="110" y="88" width="252" height="58" rx="19" fill="#FFFFFF" stroke="#EC4899"/>
+      <text x="236" y="124" text-anchor="middle" fill="#0F172A" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700">sf-ai-agentscript</text>
+      <rect x="390" y="88" width="270" height="58" rx="19" fill="#FFFFFF" stroke="#EC4899"/>
+      <text x="525" y="112" text-anchor="middle" fill="#0F172A" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700">sf-ai-agentforce-</text>
+      <text x="525" y="132" text-anchor="middle" fill="#0F172A" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700">persona</text>
+      <rect x="790" y="88" width="290" height="58" rx="19" fill="#FFFFFF" stroke="#EC4899"/>
+      <text x="935" y="112" text-anchor="middle" fill="#0F172A" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700">sf-ai-agentforce-</text>
+      <text x="935" y="132" text-anchor="middle" fill="#0F172A" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700">testing</text>
+      <rect x="1110" y="88" width="300" height="58" rx="19" fill="#FFFFFF" stroke="#EC4899"/>
+      <text x="1260" y="112" text-anchor="middle" fill="#0F172A" font-family="Segoe UI, Arial, sans-serif" font-size="17" font-weight="700">sf-ai-agentforce-</text>
+      <text x="1260" y="132" text-anchor="middle" fill="#0F172A" font-family="Segoe UI, Arial, sans-serif" font-size="17" font-weight="700">observability</text>
+      <rect x="600" y="162" width="280" height="58" rx="19" fill="#FFFFFF" stroke="#DB2777" stroke-width="2"/>
+      <text x="740" y="198" text-anchor="middle" fill="#831843" font-family="Segoe UI, Arial, sans-serif" font-size="22" font-weight="800">sf-ai-agentforce</text>
     </g>
   </g>
 
   <!-- Development -->
-  <g transform="translate(60 388)">
+  <g transform="translate(60 446)">
     <rect x="0" y="0" width="1480" height="148" rx="24" fill="url(#laneDevelopment)" stroke="#A5B4FC"/>
     <text x="28" y="38" fill="#4338CA" font-family="Avenir Next, Segoe UI, Arial, sans-serif" font-size="15" font-weight="700" letter-spacing="1.8">DEVELOPMENT</text>
     <text x="28" y="68" fill="#334155" font-family="Segoe UI, Arial, sans-serif" font-size="17">Core build work for Apex, Flow, LWC, and query design.</text>
@@ -102,7 +102,7 @@
   </g>
 
   <!-- Integration -->
-  <g transform="translate(60 556)">
+  <g transform="translate(60 614)">
     <rect x="0" y="0" width="1480" height="148" rx="24" fill="url(#laneIntegration)" stroke="#FBBF24"/>
     <text x="28" y="38" fill="#B45309" font-family="Avenir Next, Segoe UI, Arial, sans-serif" font-size="15" font-weight="700" letter-spacing="1.8">INTEGRATION</text>
     <text x="28" y="68" fill="#334155" font-family="Segoe UI, Arial, sans-serif" font-size="17">OAuth, credentials, callouts, events, and external-service patterns that connect Salesforce to the rest of the stack.</text>
@@ -115,7 +115,7 @@
   </g>
 
   <!-- Quality -->
-  <g transform="translate(60 724)">
+  <g transform="translate(60 782)">
     <rect x="0" y="0" width="1480" height="148" rx="24" fill="url(#laneQuality)" stroke="#A3E635"/>
     <text x="28" y="38" fill="#4D7C0F" font-family="Avenir Next, Segoe UI, Arial, sans-serif" font-size="15" font-weight="700" letter-spacing="1.8">QUALITY</text>
     <text x="28" y="68" fill="#334155" font-family="Segoe UI, Arial, sans-serif" font-size="17">Validation, coverage, and debugging sit after build work and before delivery.</text>
@@ -128,7 +128,7 @@
   </g>
 
   <!-- DevOps -->
-  <g transform="translate(60 892)">
+  <g transform="translate(60 950)">
     <rect x="0" y="0" width="1480" height="136" rx="24" fill="url(#laneDevOps)" stroke="#86EFAC"/>
     <text x="28" y="38" fill="#047857" font-family="Avenir Next, Segoe UI, Arial, sans-serif" font-size="15" font-weight="700" letter-spacing="1.8">DEVOPS</text>
     <text x="28" y="68" fill="#334155" font-family="Segoe UI, Arial, sans-serif" font-size="17">Release automation, org delivery, and deployment workflows.</text>
@@ -139,7 +139,7 @@
   </g>
 
   <!-- Diagrams -->
-  <g transform="translate(60 1048)">
+  <g transform="translate(60 1106)">
     <rect x="0" y="0" width="1480" height="148" rx="24" fill="url(#laneDiagram)" stroke="#5EEAD4"/>
     <text x="28" y="38" fill="#0F766E" font-family="Avenir Next, Segoe UI, Arial, sans-serif" font-size="15" font-weight="700" letter-spacing="1.8">DIAGRAMS</text>
     <text x="28" y="68" fill="#334155" font-family="Segoe UI, Arial, sans-serif" font-size="17">Visual explanation and documentation skills for architecture, ERDs, and polished design artifacts.</text>
@@ -152,7 +152,7 @@
   </g>
 
   <!-- Foundation -->
-  <g transform="translate(60 1216)">
+  <g transform="translate(60 1274)">
     <rect x="0" y="0" width="1480" height="148" rx="24" fill="url(#laneFoundation)" stroke="#7DD3FC"/>
     <text x="28" y="38" fill="#0369A1" font-family="Avenir Next, Segoe UI, Arial, sans-serif" font-size="15" font-weight="700" letter-spacing="1.8">FOUNDATION</text>
     <text x="28" y="68" fill="#334155" font-family="Segoe UI, Arial, sans-serif" font-size="17">The base layer for object model, data operations, and permission context.</text>
@@ -166,9 +166,9 @@
     </g>
   </g>
 
-  <rect x="64" y="1424" width="1472" height="16" rx="8" fill="#E2E8F0"/>
-  <rect x="64" y="1424" width="388" height="16" rx="8" fill="#BE185D" opacity="0.14"/>
-  <rect x="452" y="1424" width="388" height="16" rx="8" fill="#4F46E5" opacity="0.14"/>
-  <rect x="840" y="1424" width="300" height="16" rx="8" fill="#84CC16" opacity="0.14"/>
-  <rect x="1140" y="1424" width="396" height="16" rx="8" fill="#0284C7" opacity="0.14"/>
+  <rect x="64" y="1482" width="1472" height="16" rx="8" fill="#E2E8F0"/>
+  <rect x="64" y="1482" width="388" height="16" rx="8" fill="#BE185D" opacity="0.14"/>
+  <rect x="452" y="1482" width="388" height="16" rx="8" fill="#4F46E5" opacity="0.14"/>
+  <rect x="840" y="1482" width="300" height="16" rx="8" fill="#84CC16" opacity="0.14"/>
+  <rect x="1140" y="1482" width="396" height="16" rx="8" fill="#0284C7" opacity="0.14"/>
 </svg>
