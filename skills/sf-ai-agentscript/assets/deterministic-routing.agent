@@ -26,7 +26,7 @@ config:
    agent_label: "Smart Router Agent"
    agent_description: "Agent demonstrating zero-hallucination intent routing pattern"
    agent_type: "AgentforceServiceAgent"
-   default_agent_user: "agent@yourorg.com"  # REQUIRED: Change to valid Einstein Agent User
+   default_agent_user: "agent@yourorg.com"
 
 variables:
    # Intent classification (populated by action with is_displayable: False)

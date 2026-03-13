@@ -1142,25 +1142,29 @@ class AgentScriptValidator:
     def _check_post_action_position(self):
         in_instructions = False
         seen_pipe_text = False
+        warned_in_block = False
         for i, line in enumerate(self.lines, 1):
             stripped = line.strip()
             if stripped.startswith("instructions:"):
                 in_instructions = True
                 seen_pipe_text = False
+                warned_in_block = False
                 continue
             if in_instructions:
                 if stripped.startswith(("actions:", "topic ", "start_agent ", "before_reasoning:", "after_reasoning:")):
                     in_instructions = False
+                    warned_in_block = False
                     continue
                 if stripped.startswith("|"):
                     seen_pipe_text = True
-                if seen_pipe_text and stripped.startswith("if ") and "@variables." in stripped:
+                if not warned_in_block and seen_pipe_text and stripped.startswith("if ") and "@variables." in stripped:
                     if any(token in stripped for token in ["_status", "_done", "_complete", "_processed"]):
                         self._add_warning(
                             i,
                             "Post-action check appears after LLM instructions. Consider moving it to the top of instructions so it triggers on topic re-entry after action completion.",
                             "ASV-QLT-005",
                         )
+                        warned_in_block = True
 
     def _check_empty_list_literals(self):
         compare_pattern = re.compile(r"^\s*if\s+.*(?:==|!=)\s*\[\]\s*:?\s*(?:#.*)?$")
@@ -1666,13 +1670,17 @@ class AgentScriptValidator:
                 action_seen[key] = action
 
     def _check_transition_naming_conventions(self):
+        accepted_prefixes = ("go_to_", "go_", "back", "begin", "end_", "new_", "start_")
         for action in self.action_definitions:
-            if action.get("kind") == "utility_transition" and not action["name"].startswith("go_to_"):
-                self._add_warning(
-                    action["line"],
-                    f"Transition action '{action['name']}' does not use the recommended 'go_to_' prefix. Consistent naming makes routing graphs easier to read.",
-                    "ASV-QLT-001",
-                )
+            if action.get("kind") != "utility_transition":
+                continue
+            if action["name"].startswith(accepted_prefixes):
+                continue
+            self._add_warning(
+                action["line"],
+                f"Transition action '{action['name']}' does not use the recommended navigation naming prefixes ('go_to_', 'go_', 'back', 'start_'). Consistent naming makes routing graphs easier to read.",
+                "ASV-QLT-001",
+            )
 
     def _check_sensitive_actions_without_guards(self):
         for action in self.action_definitions:
@@ -1693,13 +1701,13 @@ class AgentScriptValidator:
             self._add_warning(line, f"{kind.title()} message uses a multiline scalar. Line-break preservation in system welcome/error messages is not reliable across surfaces.", "ASV-RUN-016")
 
     def _check_escalation_fallback_heuristic(self):
-        if "@utils.escalate" not in self.content:
+        if "@utils.escalate" not in self.content or not self.connection_blocks:
             return
         fallback_tokens = ["leave_message", "escalation_attempted", "handoff_failed", "human_available", "before_reasoning:"]
         if not any(token in self.content for token in fallback_tokens):
             self._add_warning(
                 1,
-                "Agent uses @utils.escalate but no obvious fallback/latch pattern was detected. Consider adding a before_reasoning guard or fallback topic to avoid escalation loops.",
+                "Agent uses @utils.escalate with connection routing but no obvious fallback/latch pattern was detected. Consider adding a before_reasoning guard or fallback topic to avoid escalation loops.",
                 "ASV-RUN-018",
             )
 

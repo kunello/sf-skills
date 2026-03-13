@@ -24,7 +24,7 @@ config:
    agent_label: "Secure Customer Agent"
    agent_description: "Agent with verification gate for sensitive operations"
    agent_type: "AgentforceServiceAgent"
-   default_agent_user: "agent@yourorg.com"  # REQUIRED: Change to valid Einstein Agent User
+   default_agent_user: "agent@yourorg.com"
 
 variables:
    # Identity verification state

@@ -23,7 +23,7 @@ config:
    agent_label: "Knowledge Assistant"
    agent_description: "Agent demonstrating Prompt Template with Data Cloud RAG pattern"
    agent_type: "AgentforceServiceAgent"
-   default_agent_user: "agent@yourorg.com"  # REQUIRED: Change to valid Einstein Agent User
+   default_agent_user: "agent@yourorg.com"
 
 variables:
    # Search state

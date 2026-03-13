@@ -45,7 +45,7 @@ start_agent topic_selector:
 			| Listen to the user's question.
 			| Route to the Q&A handler for processing.
 		actions:
-			handle_question: @utils.transition to @topic.qa_handler
+			go_to_qa_handler: @utils.transition to @topic.qa_handler
 			end_conversation: @utils.transition to @topic.farewell
 
 topic qa_handler:

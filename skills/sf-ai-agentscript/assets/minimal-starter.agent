@@ -18,7 +18,7 @@ config:
    agent_label: "Minimal Agent"
    agent_description: "A minimal agent template to get started"
    agent_type: "AgentforceServiceAgent"
-   default_agent_user: "agent@yourorg.com"  # REQUIRED: Change to valid Einstein Agent User
+   default_agent_user: "agent@yourorg.com"
 
 # Optional: Add variables for state tracking
 # variables:

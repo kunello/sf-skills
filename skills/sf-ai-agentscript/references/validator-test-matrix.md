@@ -38,21 +38,21 @@ PY
 | File | Dominant rules | Interpretation |
 |---|---|---|
 | `assets/agents/hello-world.agent` | `ASV-CFG-007` | Complete example; uses demo `default_agent_user`. |
-| `assets/agents/multi-topic.agent` | `ASV-CFG-007`, `ASV-RUN-018` | Complete template; placeholders intentionally unresolved. |
-| `assets/agents/production-faq.agent` | `ASV-CFG-007`, `ASV-QLT-001` | Valid example with demo user + transition naming suggestions. |
-| `assets/agents/simple-qa.agent` | `ASV-CFG-007`, `ASV-QLT-001` | Complete template with unresolved placeholders. |
-| `assets/components/escalation-setup.agent` | `ASV-CFG-007`, `ASV-QLT-001` | Complete escalation template; placeholders remain unresolved. |
-| `assets/deterministic-routing.agent` | `ASV-CFG-004`, `ASV-CFG-007`, `ASV-QLT-001` | Complete example; nested-`if` issue fixed during validator audit. |
-| `assets/flow-action-lookup.agent` | `ASV-CFG-004`, `ASV-CFG-007`, `ASV-QLT-001` | Complete example with demo user/comment and naming suggestions. |
-| `assets/hub-and-spoke.agent` | `ASV-CFG-004`, `ASV-CFG-007`, `ASV-QLT-001` | Complete example with demo user/comment and naming suggestions. |
-| `assets/minimal-starter.agent` | `ASV-CFG-004`, `ASV-CFG-007`, `ASV-QLT-001` | Minimal starter is structurally valid; warnings are expected template reminders. |
-| `assets/patterns/critical-input-collection.agent` | `ASV-RUN-012`, `ASV-RUN-007` | Complete pattern demonstrating planner-hint caveats; warnings are instructional. |
-| `assets/patterns/multi-step-workflow.agent` | `ASV-QLT-005` | Complete pattern; warnings reflect post-action check placement suggestions. |
-| `assets/patterns/procedural-instructions.agent` | `ASV-RUN-007`, `ASV-QLT-001` | Complete pattern with advisory warnings only. |
-| `assets/patterns/prompt-template-action.agent` | `ASV-RUN-005`, `ASV-RUN-007` | Complete pattern intentionally demonstrates risky prompt output displayability / planner hints. |
-| `assets/patterns/system-instruction-overrides.agent` | `ASV-RUN-010`, `ASV-CFG-007`, `ASV-QLT-001` | Complete pattern; lifecycle `run` warnings are expected portability cautions. |
-| `assets/prompt-rag-search.agent` | `ASV-CFG-004`, `ASV-CFG-007`, `ASV-QLT-001` | Complete example with demo user/comment and naming suggestions. |
-| `assets/verification-gate.agent` | `ASV-CFG-004`, `ASV-CFG-007`, `ASV-RUN-018` | Complete pattern; undefined `refund_amount` bug was fixed during validator audit. |
+| `assets/agents/multi-topic.agent` | `ASV-CFG-007` | Complete template; placeholders intentionally unresolved. |
+| `assets/agents/production-faq.agent` | `ASV-CFG-007` | Valid example; remaining warning is the demo `default_agent_user`. |
+| `assets/agents/simple-qa.agent` | `ASV-CFG-007` | Complete template with unresolved placeholders. |
+| `assets/components/escalation-setup.agent` | `ASV-CFG-007`, `ASV-RUN-018` | Complete escalation template; placeholders remain unresolved, plus the connection-backed escalation fallback heuristic. |
+| `assets/deterministic-routing.agent` | `ASV-CFG-007` | Complete example; nested-`if` issue fixed during validator audit and inline demo-user comment removed. |
+| `assets/flow-action-lookup.agent` | `ASV-CFG-007` | Complete example with only the demo `default_agent_user` reminder remaining. |
+| `assets/hub-and-spoke.agent` | `ASV-CFG-007` | Complete example with only the demo `default_agent_user` reminder remaining. |
+| `assets/minimal-starter.agent` | `ASV-CFG-007` | Minimal starter is structurally valid; remaining warning is the demo `default_agent_user`. |
+| `assets/patterns/critical-input-collection.agent` | `ASV-RUN-012`, `ASV-RUN-007`, `ASV-CFG-007` | Complete pattern demonstrating planner-hint caveats; warnings are instructional. |
+| `assets/patterns/multi-step-workflow.agent` | `ASV-RUN-007`, `ASV-RUN-012`, `ASV-QLT-005` | Complete pattern; warnings are mostly planner-hint guidance plus one post-action ordering suggestion. |
+| `assets/patterns/procedural-instructions.agent` | `ASV-RUN-007`, `ASV-CFG-007` | Complete pattern with advisory warnings only. |
+| `assets/patterns/prompt-template-action.agent` | `ASV-RUN-005`, `ASV-RUN-007`, `ASV-CFG-007` | Complete pattern intentionally demonstrates risky prompt output displayability / planner hints. |
+| `assets/patterns/system-instruction-overrides.agent` | `ASV-RUN-010`, `ASV-CFG-007` | Complete pattern; lifecycle `run` warnings are expected portability cautions. |
+| `assets/prompt-rag-search.agent` | `ASV-CFG-007` | Complete example with only the demo `default_agent_user` reminder remaining. |
+| `assets/verification-gate.agent` | `ASV-CFG-007` | Complete pattern; undefined `refund_amount` bug was fixed during validator audit and inline demo-user comment removed. |
 
 ## Blocking Files
 
